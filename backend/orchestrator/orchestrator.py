@@ -23,7 +23,7 @@ class AgentFlowOrchestrator:
             "target_column": target_column,
             "dataset_path": dataset_path,
 
-            "status": "running",
+            "status": "created",
             "current_agent": None,
 
             "agents": {
@@ -36,3 +36,6 @@ class AgentFlowOrchestrator:
         self.workflows[workflow_id] = workflow
 
         return workflow
+
+    def get_workflow_status(self, workflow_id: str):
+        return self.workflows.get(workflow_id)

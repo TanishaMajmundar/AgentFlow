@@ -1,7 +1,11 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 
 from backend.orchestrator.orchestrator import AgentFlowOrchestrator
-from backend.schemas.workflow import WorkflowRequest, WorkflowResponse
+from backend.schemas.workflow import (
+    WorkflowRequest,
+    WorkflowResponse,
+    WorkflowStatusResponse
+)
 
 
 app = FastAPI(
@@ -30,5 +34,22 @@ def start_workflow(request: WorkflowRequest):
         target_column=request.target_column,
         dataset_path=request.dataset_path
     )
+
+    return workflow
+
+
+@app.get(
+    "/workflow/{workflow_id}/status",
+    response_model=WorkflowStatusResponse
+)
+def get_workflow_status(workflow_id: str):
+
+    workflow = orchestrator.get_workflow_status(workflow_id)
+
+    if workflow is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Workflow not found"
+        )
 
     return workflow

@@ -14,3 +14,11 @@ class WorkflowResponse(BaseModel):
     project_name: str
     status: str
     current_agent: Optional[str] = None
+
+
+class WorkflowStatusResponse(BaseModel):
+    workflow_id: str
+    project_name: str
+    status: str
+    current_agent: Optional[str] = None
+    agents: dict
