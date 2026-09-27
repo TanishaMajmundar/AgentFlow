@@ -11,6 +11,7 @@ class AgentFlowOrchestrator:
         project_name: str,
         problem_statement: str,
         target_column: str,
+        dataset_id: str | None = None,
         dataset_path: str | None = None
     ):
 
@@ -21,6 +22,7 @@ class AgentFlowOrchestrator:
             "project_name": project_name,
             "problem_statement": problem_statement,
             "target_column": target_column,
+            "dataset_id": dataset_id,
             "dataset_path": dataset_path,
 
             "status": "created",

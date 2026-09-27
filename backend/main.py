@@ -1,4 +1,6 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException
+
+from backend.services.dataset_service import save_dataset
 
 from backend.orchestrator.orchestrator import AgentFlowOrchestrator
 from backend.schemas.workflow import (
@@ -32,6 +34,7 @@ def start_workflow(request: WorkflowRequest):
         project_name=request.project_name,
         problem_statement=request.problem_statement,
         target_column=request.target_column,
+        dataset_id=request.dataset_id,
         dataset_path=request.dataset_path
     )
 
@@ -53,3 +56,16 @@ def get_workflow_status(workflow_id: str):
         )
 
     return workflow
+
+
+@app.post("/dataset/upload")
+def upload_dataset(file: UploadFile = File(...)):
+
+    try:
+        return save_dataset(file)
+
+    except ValueError as e:
+        raise HTTPException(
+            status_code=400,
+            detail=str(e)
+        )
