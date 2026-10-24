@@ -27,3 +27,13 @@ class WorkflowStatusResponse(BaseModel):
     dataset_id: Optional[str] = None
     dataset_path: Optional[str] = None
     agents: dict
+    error: Optional[str] = None
+
+
+class WorkflowResultsResponse(BaseModel):
+    workflow_id: str
+    status: str
+    mock_agents: list[str]
+    results: dict
+    final_model: Optional[dict] = None
+    error: Optional[str] = None
