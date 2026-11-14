@@ -1,0 +1,171 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ------------------------------------------------------------------ */
+/*  THEME TOKENS — RGB channels so Tailwind alpha modifiers work       */
+/* ------------------------------------------------------------------ */
+:root,
+:root[data-theme="dark"] {
+  --c-void: 10 13 18;
+  --c-deep: 13 17 23;
+  --c-panel: 18 22 29;
+  --c-panel2: 23 28 37;
+  --c-line: 35 42 53;
+  --c-line2: 51 61 77;
+  --c-edge: 27 33 43;
+  --c-idle: 58 67 82;
+  --c-dash: 44 52 65;
+  --c-ink: 233 237 244;
+  --c-muted: 137 146 163;
+  --c-dim: 91 100 114;
+  --c-brand: 108 124 255;
+  --c-brand-hover: 130 145 255;
+  --c-on-brand: 10 13 18;
+  --c-data: 69 217 196;
+  --c-strategy: 185 140 255;
+  --c-training: 255 180 84;
+  --c-danger: 255 107 107;
+  --grid: rgba(255, 255, 255, 0.028);
+  --glow-opacity: 0.15;
+  --card-shadow: none;
+  --card-shadow-hover: 0 10px 30px -12px rgb(108 124 255 / 0.28);
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  --c-void: 246 247 251;
+  --c-deep: 238 240 247;
+  --c-panel: 255 255 255;
+  --c-panel2: 241 243 249;
+  --c-line: 221 226 236;
+  --c-line2: 196 204 219;
+  --c-edge: 230 233 241;
+  --c-idle: 196 204 219;
+  --c-dash: 196 204 219;
+  --c-ink: 17 21 31;
+  --c-muted: 90 100 120;
+  --c-dim: 112 121 140;
+  --c-brand: 79 91 232;
+  --c-brand-hover: 62 73 205;
+  --c-on-brand: 255 255 255;
+  --c-data: 14 154 138;
+  --c-strategy: 124 77 219;
+  --c-training: 196 112 0;
+  --c-danger: 214 54 62;
+  --grid: rgba(15, 23, 42, 0.05);
+  --glow-opacity: 0.2;
+  --card-shadow: 0 1px 2px rgb(15 23 42 / 0.05), 0 6px 18px -10px rgb(15 23 42 / 0.1);
+  --card-shadow-hover: 0 14px 34px -14px rgb(79 91 232 / 0.35);
+  color-scheme: light;
+}
+
+/* Shared keyframes live here (not in tailwind.config) because raw CSS below uses them directly */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@layer base {
+  body {
+    @apply bg-void font-sans text-ink antialiased;
+    margin: 0;
+  }
+  ::selection { background: rgb(var(--c-brand) / 0.3); }
+  :focus-visible { outline: 2px solid rgb(var(--c-brand)); outline-offset: 2px; }
+}
+
+@layer components {
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, var(--grid) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--grid) 1px, transparent 1px);
+    background-size: 42px 42px;
+  }
+  .label-mono { @apply font-mono text-[11px] uppercase tracking-wide text-muted; }
+
+  .input {
+    @apply w-full rounded-lg border border-line bg-panel2 px-3.5 py-2.5 text-sm text-ink
+           placeholder:text-dim transition focus:border-brand focus:outline-none
+           focus:ring-[3px] focus:ring-brand/20 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .input-error { @apply border-danger/70 focus:border-danger focus:ring-danger/20; }
+
+  .btn-primary {
+    @apply relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-lg bg-brand px-5 py-2.5
+           text-sm font-medium text-on-brand transition duration-200 hover:bg-brand-hover active:scale-[0.97]
+           disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100;
+  }
+  .btn-primary:hover:not(:disabled) { box-shadow: 0 8px 24px -8px rgb(var(--c-brand) / 0.6); }
+  /* light sweep across the button on hover */
+  .btn-primary::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: linear-gradient(105deg, transparent 35%, rgb(255 255 255 / 0.28) 50%, transparent 65%);
+    transform: translateX(-120%);
+    pointer-events: none;
+  }
+  .btn-primary:hover:not(:disabled)::after { transform: translateX(120%); transition: transform .7s ease; }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-line px-4 py-2.5
+           text-sm text-muted transition duration-200 hover:border-line2 hover:text-ink active:scale-[0.97];
+  }
+
+  .card { @apply rounded-xl border border-line bg-panel; box-shadow: var(--card-shadow); }
+  .card-hover { @apply card transition duration-300 hover:-translate-y-1 hover:border-brand/40; }
+  .card-hover:hover { box-shadow: var(--card-shadow-hover); }
+
+  .nudge { transition: transform .2s ease; }
+  .btn-primary:hover .nudge, .btn-ghost:hover .nudge { transform: translateX(3px); }
+
+  .skeleton {
+    background: linear-gradient(90deg, rgb(var(--c-panel2)) 0%, rgb(var(--c-line) / 0.9) 50%, rgb(var(--c-panel2)) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.6s linear infinite;
+  }
+
+  /* entrance helpers */
+  .reveal {
+    opacity: 0;
+    animation: fadeIn .6s cubic-bezier(.2,.7,.2,1) forwards;
+    animation-delay: calc(var(--i, 0) * 90ms);
+  }
+  .stagger > * { animation: fadeIn .5s cubic-bezier(.2,.7,.2,1) both; }
+  .stagger > *:nth-child(1) { animation-delay: .04s; }
+  .stagger > *:nth-child(2) { animation-delay: .10s; }
+  .stagger > *:nth-child(3) { animation-delay: .16s; }
+  .stagger > *:nth-child(4) { animation-delay: .22s; }
+  .stagger > *:nth-child(5) { animation-delay: .28s; }
+  .stagger > *:nth-child(6) { animation-delay: .34s; }
+  .stagger > *:nth-child(7) { animation-delay: .40s; }
+  .stagger > *:nth-child(8) { animation-delay: .46s; }
+  .stagger > *:nth-child(n+9) { animation-delay: .5s; }
+}
+
+/* Theme switch: circular reveal (View Transitions API) ... */
+::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+::view-transition-old(root) { z-index: 1; }
+::view-transition-new(root) { z-index: 2; }
+/* ... with a soft cross-fade fallback for browsers without it */
+.theme-fade, .theme-fade * {
+  transition: background-color .35s ease, border-color .35s ease, color .35s ease,
+              fill .35s ease, stroke .35s ease !important;
+}
+
+/* printing / "save as PDF" should never capture content that is still waiting to be scrolled into view */
+@media print {
+  [data-reveal], .reveal, .stagger > * { opacity: 1 !important; transform: none !important; animation: none !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
