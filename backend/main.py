@@ -16,6 +16,8 @@ from backend.schemas.workflow import (
 )
 from backend.orchestrator.target_detector import detect_target, validate_target, load_dataset_frame
 
+from backend.services.frontend_adapter import build_status, build_results
+
 app = FastAPI(
     title="AgentFlow Backend",
     description="Backend and orchestration API for AgentFlow",
@@ -218,3 +220,20 @@ def analyze_project(project_id: str):
     orchestrator.workflows[project_id] = wf
     repo.save_workflow(wf)
     return result
+
+@app.get("/projects/{project_id}/status")
+def project_status(project_id: str):
+    wf = orchestrator.get_workflow_status(project_id)
+    if wf is None:
+        raise HTTPException(status_code=404, detail="Project not found")
+    return build_status(wf)
+
+
+@app.get("/projects/{project_id}/results")
+def project_results(project_id: str):
+    wf = orchestrator.get_workflow_status(project_id)
+    if wf is None:
+        raise HTTPException(status_code=404, detail="Project not found")
+    if wf["status"] != "completed":
+        raise HTTPException(status_code=409, detail=wf.get("error") or "This workflow hasn't finished yet.")
+    return build_results(wf)
