@@ -1,4 +1,5 @@
 import time
+import re
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
@@ -53,6 +54,12 @@ from agentflow_data_agent.utils.profilers import (
     profile_and_clean,
 )
 
+def _resolve_column(df, name):
+    """Column names are cleaned on load (spaces -> '_'). Map the user's name to the cleaned one."""
+    if not name or name in df.columns:
+        return name
+    cleaned = re.sub(r"[\[\]<>,:\"\'\s\+\-\/\\]+", "_", str(name).strip()).strip("_")
+    return cleaned if cleaned in df.columns else name
 
 class AutonomousDataAgent:
     """
@@ -183,8 +190,21 @@ class AutonomousDataAgent:
         raw_df = load_dataset(file_path, output_dir=self.output_dir)
         df_opt, mem_metrics = optimize_memory(raw_df)
 
+        target_column = _resolve_column(df_opt, target_column)
+
         type_cleaner = UniversalTypeCleaner(treat_unknown_as_missing=True)
-        df_cleaned_types = type_cleaner.fit_transform(df_opt)
+        if target_column and target_column in df_opt.columns:
+            # clean the features only; keep the target's original labels (yes/no, etc.)
+            cleaned = type_cleaner.fit_transform(df_opt.drop(columns=[target_column]))
+            tgt = df_opt[target_column]
+            if not pd.api.types.is_numeric_dtype(tgt) and not pd.api.types.is_bool_dtype(tgt):
+                was_missing = tgt.isna()
+                tgt = tgt.astype(str).str.strip()
+                tgt[was_missing | (tgt == "")] = np.nan
+            cleaned[target_column] = tgt
+            df_cleaned_types = cleaned[list(df_opt.columns)]
+        else:
+            df_cleaned_types = type_cleaner.fit_transform(df_opt)
         disguised_cnt = type_cleaner.disguised_count_
 
         target_report = discover_target(
