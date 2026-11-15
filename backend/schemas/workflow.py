@@ -1,0 +1,39 @@
+from pydantic import BaseModel
+from typing import Optional
+
+
+class WorkflowRequest(BaseModel):
+    project_name: str
+    problem_statement: str
+    target_column: str
+    dataset_id: Optional[str] = None
+    dataset_path: Optional[str] = None
+
+
+class WorkflowResponse(BaseModel):
+    workflow_id: str
+    project_name: str
+    status: str
+    current_agent: Optional[str] = None
+    dataset_id: Optional[str] = None
+    dataset_path: Optional[str] = None
+
+
+class WorkflowStatusResponse(BaseModel):
+    workflow_id: str
+    project_name: str
+    status: str
+    current_agent: Optional[str] = None
+    dataset_id: Optional[str] = None
+    dataset_path: Optional[str] = None
+    agents: dict
+    error: Optional[str] = None
+
+
+class WorkflowResultsResponse(BaseModel):
+    workflow_id: str
+    status: str
+    mock_agents: list[str]
+    results: dict
+    final_model: Optional[dict] = None
+    error: Optional[str] = None
