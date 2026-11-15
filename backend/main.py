@@ -33,7 +33,13 @@ app.add_middleware(
 )
 
 repo = Repository()
-orchestrator = AgentFlowOrchestrator(repo=repo)
+try:
+    from backend.agents.real_data_agent import real_data_agent
+except Exception as e:   # missing packages etc.: fall back to the mock so the API still starts
+    print(f"[AgentFlow] Real Data Agent unavailable, using the mock instead: {e}")
+    real_data_agent = None
+
+orchestrator = AgentFlowOrchestrator(repo=repo, data_agent=real_data_agent)
 
 
 @app.on_event("startup")
@@ -237,3 +243,15 @@ def project_results(project_id: str):
     if wf["status"] != "completed":
         raise HTTPException(status_code=409, detail=wf.get("error") or "This workflow hasn't finished yet.")
     return build_results(wf)
+
+
+@app.delete("/projects/{project_id}")
+def delete_project(project_id: str):
+    wf = orchestrator.get_workflow_status(project_id)
+    if wf is None:
+        raise HTTPException(status_code=404, detail="Project not found")
+    if wf["status"] == "running":
+        raise HTTPException(status_code=409, detail="Cannot delete a running project")
+    orchestrator.workflows.pop(project_id, None)
+    repo.delete_workflow(project_id)
+    return {"deleted": project_id}

@@ -31,9 +31,10 @@ class Repository:
         return list(cursor)
 
     def mark_interrupted(self):
-        """Workflows still 'running'/'created' at startup were cut off by a restart."""
+        """Workflows still 'running' at startup were cut off by a restart.
+        ('created' projects are just waiting for a dataset/target, so they are left alone.)"""
         count = 0
-        for doc in get_db().workflows.find({"status": {"$in": ["running", "created"]}}):
+        for doc in get_db().workflows.find({"status": "running"}):
             agents = {k: ("failed" if v == "running" else v)
                       for k, v in doc.get("agents", {}).items()}
             get_db().workflows.update_one(
@@ -44,6 +45,9 @@ class Repository:
             )
             count += 1
         return count
+
+    def delete_workflow(self, workflow_id: str) -> bool:
+        return get_db().workflows.delete_one({"_id": workflow_id}).deleted_count == 1
 
     def save_dataset(self, info: dict):
         doc = {**info, "created_at": _now()}
