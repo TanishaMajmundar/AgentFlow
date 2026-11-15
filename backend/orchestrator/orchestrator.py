@@ -38,10 +38,19 @@ class AgentFlowOrchestrator:
             "final_model": None,
             "mock_agents": [],
             "error": None,
+            "project_id": workflow_id,
+            "dataset_name": None,
+            "columns": [],
+            "target_recommendation": None,
+            "model_path": None,
         }
         self.workflows[workflow_id] = workflow
         self.repo.save_workflow(workflow)
         return workflow
+    
+    def create_project(self, project_name, problem_statement):
+        """A project is a workflow that has no dataset or target yet."""
+        return self.start_workflow(project_name, problem_statement, target_column=None)
 
     def get_workflow_status(self, workflow_id: str):
         wf = self.workflows.get(workflow_id)
