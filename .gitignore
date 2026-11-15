@@ -18,3 +18,7 @@ frontend/dist/
 # IDE and OS
 .vscode/
 .DS_Store
+
+backend/uploads/
+backend/storage/
+artifacts/
