@@ -14,7 +14,7 @@ from backend.schemas.workflow import (
     WorkflowStatusResponse,
     WorkflowResultsResponse,
 )
-
+from backend.orchestrator.target_detector import detect_target, validate_target, load_dataset_frame
 
 app = FastAPI(
     title="AgentFlow Backend",
@@ -159,13 +159,18 @@ def set_project_target(project_id: str, body: TargetUpdate):
     wf = orchestrator.get_workflow_status(project_id)
     if wf is None:
         raise HTTPException(status_code=404, detail="Project not found")
+    path = wf.get("dataset_path")
+    if not path or not Path(path).is_file():
+        raise HTTPException(status_code=400, detail="Upload a dataset first")
     target = body.target_column.strip()
-    if target not in wf.get("columns", []):
-        raise HTTPException(status_code=400, detail=f"Target column '{target}' not in dataset")
+    check = validate_target(load_dataset_frame(path), target)
+    if not check["valid"]:
+        raise HTTPException(status_code=400, detail=" ".join(check["problems"]))
     wf["target_column"] = target
     orchestrator.workflows[project_id] = wf
     repo.save_workflow(wf)
-    return {"project_id": project_id, "target_column": target}
+    return {"project_id": project_id, "target_column": target,
+            "problem_type": check["problem_type"], "warnings": check["warnings"]}
 
 
 @app.post("/projects/{project_id}/start")
@@ -194,3 +199,22 @@ def start_project(project_id: str, background_tasks: BackgroundTasks):
 
     background_tasks.add_task(orchestrator.run_workflow, project_id)
     return {"project_id": project_id, "status": "started"}
+
+
+@app.post("/projects/{project_id}/analyze")
+def analyze_project(project_id: str):
+    wf = orchestrator.get_workflow_status(project_id)
+    if wf is None:
+        raise HTTPException(status_code=404, detail="Project not found")
+    path = wf.get("dataset_path")
+    if not path or not Path(path).is_file():
+        raise HTTPException(status_code=400, detail="Upload a dataset first")
+    try:
+        df = load_dataset_frame(path)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Could not read the dataset: {e}")
+    result = detect_target(df, wf.get("problem_statement", ""))
+    wf["target_recommendation"] = result
+    orchestrator.workflows[project_id] = wf
+    repo.save_workflow(wf)
+    return result
