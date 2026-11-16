@@ -1,4 +1,5 @@
 import csv
+import json
 from pathlib import Path
 from pydantic import BaseModel
 from fastapi import FastAPI, UploadFile, File, HTTPException, BackgroundTasks
@@ -256,3 +257,59 @@ def delete_project(project_id: str):
     orchestrator.workflows.pop(project_id, None)
     repo.delete_workflow(project_id)
     return {"deleted": project_id}
+
+@app.get("/projects/{project_id}/data-report")
+def project_data_report(project_id: str):
+    wf = orchestrator.get_workflow_status(project_id)
+    if wf is None:
+        raise HTTPException(status_code=404, detail="Project not found")
+    data = (wf.get("results") or {}).get("data_agent") or {}
+    report_path = (data.get("artifacts") or {}).get("report")
+    if not report_path or not Path(report_path).is_file():
+        raise HTTPException(
+            status_code=404,
+            detail="No data report for this project (the Data Agent has not finished, or it ran in mock mode).")
+    rep = json.loads(Path(report_path).read_text(encoding="utf-8"))
+
+    h, t = rep["health_metrics"], rep["target_report"]
+    v, p, lk = rep["visual_analytics"], rep["preprocessing_summary"], rep["leakage_report"]
+    outliers = sorted(v.get("outlier_summary", {}).items(), key=lambda kv: kv[1], reverse=True)[:6]
+    return {
+        "health": {
+            "score": h["overall_health_score"], "grade": h["health_grade"],
+            "rows": h["total_rows_raw"], "columns": h["total_cols_raw"],
+            "components": {
+                "Completeness": h["completeness_score"], "Uniqueness": h["uniqueness_score"],
+                "Outlier stability": h["outlier_stability_score"],
+                "Cardinality": h["cardinality_health_score"], "Target health": h["target_health_score"],
+            },
+            "remediations": h.get("actionable_remediations", []),
+        },
+        "target": {
+            "column": t["selected_target"], "problem_type": t["inferred_problem_type"],
+            "class_distribution": t.get("class_distribution"),
+            "imbalance_ratio": t.get("imbalance_ratio"), "is_imbalanced": t.get("is_imbalanced"),
+            "skewness": t.get("target_skewness"),
+        },
+        "correlations": [
+            {"a": c["feature_a"], "b": c["feature_b"], "value": c["correlation"]}
+            for c in v.get("top_correlations", [])[:8]
+        ],
+        "outliers": [{"column": k, "pct": val} for k, val in outliers if val > 0],
+        "preprocessing": {
+            "scaling": p["scaling_method"],
+            "encoded_columns": len(p.get("encoding_methods", {})),
+            "engineered_features": p.get("engineered_interaction_features", []),
+            "features_before": p["features_count_before_preprocess"],
+            "features_expanded": p["features_count_after_expansion"],
+            "features_final": p["features_count_final"],
+            "smote_applied": p["smote_applied"],
+            "smote_rows": p["smote_synthetic_samples_added"],
+        },
+        "leakage": {
+            "train_rows": lk["train_rows"], "test_rows": lk["test_rows"],
+            "stratified": lk["stratified_split_used"],
+            "leaky_removed": lk.get("suspicious_leaky_features_flagged", []),
+            "collinear_removed": lk.get("high_collinearity_dropped", []),
+        },
+    }

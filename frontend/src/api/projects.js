@@ -88,3 +88,9 @@ export async function getWorkflowResults(projectId) {
   const { data } = await api.get(ENDPOINTS.workflowResults(projectId));
   return data;
 }
+
+export async function getDataReport(projectId) {
+  if (USE_MOCK) return null;
+  const { data } = await api.get(ENDPOINTS.dataReport(projectId));
+  return data;
+}

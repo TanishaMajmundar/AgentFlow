@@ -14,7 +14,7 @@ export default function AppLayout() {
 
   return (
     <div className="bg-grid min-h-screen">
-      <header className="sticky top-0 z-30 border-b border-edge bg-void/85 backdrop-blur">
+      <header className="sticky top-0 z-30 border-b border-edge bg-void/85 backdrop-blur print:hidden">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3.5">
           <div className="flex items-center gap-8">
             <Logo size={17} to="/projects" />

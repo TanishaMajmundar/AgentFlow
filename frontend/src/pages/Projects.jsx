@@ -29,7 +29,7 @@ export default function Projects() {
 
       <div className="mt-8">
         {isLoading && (
-          <div className="grid gap-4 md:grid-cols-2" aria-busy="true">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3" aria-busy="true">
             {[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-[132px]" />)}
           </div>
         )}
@@ -56,7 +56,7 @@ export default function Projects() {
         )}
 
         {data && data.length > 0 && (
-          <ul className="stagger grid gap-4 md:grid-cols-2">
+          <ul className="stagger grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {data.map((p) => (
               <li key={p.project_id}>
                 <Link

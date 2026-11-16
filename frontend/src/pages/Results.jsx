@@ -1,6 +1,6 @@
 import { Link, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Check, Download, Plus, Star } from "lucide-react";
+import { ArrowLeft, Check, Download, Plus, Printer, Star } from "lucide-react";
 import {
   Bar, BarChart, CartesianGrid, Cell, LabelList, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
@@ -11,9 +11,10 @@ import ErrorState from "../components/ErrorState";
 import { Skeleton } from "../components/Skeleton";
 import { formatNumber, formatScore } from "../lib/format";
 import { rgb } from "../lib/theme";
-import { useChartColors } from "../context/ThemeContext";
+import { useChartColors, useTheme } from "../context/ThemeContext";
 import CountUp from "../components/CountUp";
 import Reveal from "../components/Reveal";
+import DataReport from "../components/DataReport";
 
 const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : "—");
 
@@ -30,6 +31,7 @@ function exportJson(results) {
 export default function Results() {
   const { projectId } = useParams();
   const chart = useChartColors();
+  const { theme, setTheme } = useTheme();
   const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
     queryKey: ["results", projectId],
     queryFn: () => getWorkflowResults(projectId),
@@ -37,7 +39,7 @@ export default function Results() {
   });
 
   const Back = (
-    <Link to="/projects" className="inline-flex items-center gap-1.5 text-sm text-muted transition hover:text-ink">
+    <Link to="/projects" className="inline-flex items-center gap-1.5 text-sm text-muted transition hover:text-ink print:hidden">
       <ArrowLeft size={14} /> Projects
     </Link>
   );
@@ -45,7 +47,7 @@ export default function Results() {
   if (isError) {
     const status = getErrorStatus(error);
     return (
-      <main className="mx-auto max-w-[760px] px-6 py-10">
+      <main className="mx-auto max-w-6xl px-6 py-10">
         {Back}
         <div className="mt-8">
           <ErrorState
@@ -67,7 +69,7 @@ export default function Results() {
 
   if (isLoading || !data) {
     return (
-      <main className="mx-auto max-w-[760px] px-6 py-10" aria-busy="true">
+      <main className="mx-auto max-w-6xl px-6 py-10" aria-busy="true">
         {Back}
         <Skeleton className="mt-6 h-8 w-64" />
         <div className="mt-6 flex gap-4"><Skeleton className="h-24 flex-1" /><Skeleton className="h-24 flex-1" /><Skeleton className="h-24 flex-1" /></div>
@@ -80,19 +82,40 @@ export default function Results() {
   const sorted = [...models].sort((a, b) => b.score - a.score);
   const chartHeight = Math.max(180, models.length * 58 + 30);
 
+  // Charts take their colours from JS, so switch to the light theme while printing.
+  function downloadPdf() {
+    const original = theme;
+    const previousTitle = document.title;
+    document.title = `${data.project_name} - AgentFlow report`;   // becomes the PDF file name
+    window.addEventListener("afterprint", () => {
+      document.title = previousTitle;
+      if (original !== "light") setTheme(original);
+    }, { once: true });
+    if (original !== "light") setTheme("light");
+    setTimeout(() => window.print(), 400);
+  }
+
   return (
-    <main className="mx-auto max-w-[760px] px-6 py-10">
+    <main className="mx-auto max-w-6xl px-6 py-10">
       {Back}
 
-      <div className="mt-5 animate-fade-in">
-        <div className="flex items-center gap-2 font-mono text-[11px] text-data">
-          <Check size={13} /> AGENTFLOW COMPLETE
+      <div className="mt-5 flex flex-wrap items-start justify-between gap-4 animate-fade-in">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 font-mono text-[11px] text-data">
+            <Check size={13} /> AGENTFLOW COMPLETE
+          </div>
+          <h1 className="mt-2 font-display text-2xl font-semibold">{data.project_name}</h1>
+          <p className="mt-1 text-sm text-muted">{data.problem_statement}</p>
+          <p className="mt-2 font-mono text-[11px] text-dim">
+            target: <span className="text-muted">{data.target_column}</span> · dataset: <span className="text-muted">{dataset.filename}</span>
+          </p>
+          <p className="mt-1 hidden font-mono text-[11px] text-dim print:block">
+            Report generated {new Date().toLocaleString()}
+          </p>
         </div>
-        <h1 className="mt-2 font-display text-2xl font-semibold">{data.project_name}</h1>
-        <p className="mt-1 text-sm text-muted">{data.problem_statement}</p>
-        <p className="mt-2 font-mono text-[11px] text-dim">
-          target: <span className="text-muted">{data.target_column}</span> · dataset: <span className="text-muted">{dataset.filename}</span>
-        </p>
+        <button onClick={downloadPdf} className="btn-primary print:hidden">
+          <Printer size={15} /> Download report (PDF)
+        </button>
       </div>
 
       <div className="stagger mt-7 flex flex-col gap-4 sm:flex-row">
@@ -176,8 +199,8 @@ export default function Results() {
           ) : <p className="text-sm text-dim">No preprocessing steps were reported.</p>}
         </section>
       </div></Reveal>
-
-      <Reveal><div className="mt-8 flex flex-wrap gap-3">
+      <Reveal><DataReport projectId={projectId} /></Reveal>
+      <Reveal><div className="mt-8 flex flex-wrap gap-3 print:hidden">
         <Link to="/projects" className="btn-ghost"><ArrowLeft size={14} /> All projects</Link>
         <button onClick={() => exportJson(data)} className="btn-ghost"><Download size={14} /> Export JSON</button>
         <Link to="/projects/new" className="btn-primary ml-auto"><Plus size={15} /> New project</Link>

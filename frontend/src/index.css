@@ -159,7 +159,25 @@
 
 /* printing / "save as PDF" should never capture content that is still waiting to be scrolled into view */
 @media print {
+  @page { size: A4; margin: 12mm; }
   [data-reveal], .reveal, .stagger > * { opacity: 1 !important; transform: none !important; animation: none !important; }
+  .card.break-auto { break-inside: auto; }
+  /* paper is always white: force the light palette */
+  :root, :root[data-theme="dark"], :root[data-theme="light"] {
+    --c-void: 255 255 255; --c-deep: 255 255 255; --c-panel: 255 255 255; --c-panel2: 241 243 249;
+    --c-line: 221 226 236; --c-line2: 196 204 219; --c-edge: 230 233 241;
+    --c-idle: 196 204 219; --c-dash: 196 204 219;
+    --c-ink: 17 21 31; --c-muted: 90 100 120; --c-dim: 112 121 140;
+    --c-brand: 79 91 232; --c-brand-hover: 62 73 205; --c-on-brand: 255 255 255;
+    --c-data: 14 154 138; --c-strategy: 124 77 219; --c-training: 196 112 0; --c-danger: 214 54 62;
+    --card-shadow: none; --card-shadow-hover: none;
+    color-scheme: light;
+  }
+  body { background: #fff !important; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }  /* keep bar colours */
+  .bg-grid { background-image: none !important; }
+  .card { break-inside: avoid; box-shadow: none !important; }
+  .animate-page-in, .animate-fade-in { animation: none !important; }
 }
 
 @media (prefers-reduced-motion: reduce) {

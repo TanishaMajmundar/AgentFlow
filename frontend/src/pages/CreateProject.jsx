@@ -141,7 +141,7 @@ export default function CreateProject() {
     const showWarnings = Boolean(analysis.validation?.warnings?.length) && target === rec;
 
     return (
-      <main className="mx-auto max-w-[600px] px-6 py-10">
+      <main className="mx-auto max-w-3xl px-6 py-10">
         <button type="button" disabled={busy} onClick={() => setPhase("form")}
           className="inline-flex items-center gap-1.5 text-sm text-muted transition hover:text-ink">
           <ArrowLeft size={14} /> Back
@@ -243,7 +243,7 @@ export default function CreateProject() {
 
   /* -------------------------------- form screen ------------------------------- */
   return (
-    <main className="mx-auto max-w-[600px] px-6 py-10">
+    <main className="mx-auto max-w-3xl px-6 py-10">
       <Link to="/projects" className="inline-flex items-center gap-1.5 text-sm text-muted transition hover:text-ink">
         <ArrowLeft size={14} /> Projects
       </Link>
