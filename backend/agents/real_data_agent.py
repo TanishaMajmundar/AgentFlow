@@ -56,8 +56,10 @@ def real_data_agent(dataset_path, target_column, problem_statement=""):
 
     t = report.target_report
     h = report.health_metrics
+    leaky = set(report.leakage_report.suspicious_leaky_features_flagged)
     feats = [c for c in report.column_profiles
-             if c.name != t.selected_target and not c.action_taken.startswith("dropped")]
+             if c.name != t.selected_target and c.name not in leaky
+             and not c.action_taken.startswith("dropped")]
     numeric = sum(1 for c in feats
                   if c.inferred_semantic_type in ("continuous_numeric", "categorical_numeric"))
     missing_total = sum(c.missing_count for c in report.column_profiles)

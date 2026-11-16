@@ -17,6 +17,7 @@ from backend.schemas.workflow import (
 from backend.orchestrator.target_detector import detect_target, validate_target, load_dataset_frame
 
 from backend.services.frontend_adapter import build_status, build_results
+from backend.orchestrator.target_analysis import analyze_target
 
 app = FastAPI(
     title="AgentFlow Backend",
@@ -221,7 +222,7 @@ def analyze_project(project_id: str):
         df = load_dataset_frame(path)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Could not read the dataset: {e}")
-    result = detect_target(df, wf.get("problem_statement", ""))
+    result = analyze_target(df, wf.get("problem_statement", ""))
     wf["target_recommendation"] = result
     orchestrator.workflows[project_id] = wf
     repo.save_workflow(wf)

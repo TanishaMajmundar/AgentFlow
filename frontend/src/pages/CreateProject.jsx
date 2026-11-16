@@ -163,6 +163,12 @@ export default function CreateProject() {
               {rec && <span>confidence {conf}%</span>}
             </div>
             <p className="mt-3 text-sm leading-relaxed text-muted">{analysis.reason}</p>
+            {analysis.llm && !analysis.llm.error && (
+              <p className="mt-2 font-mono text-[11px] text-dim">
+                Checked by {analysis.llm.model} ·{" "}
+                {analysis.llm.agrees_with_rules ? "agrees with rule-based scoring" : "differs from rule-based scoring"}
+              </p>
+            )}            
           </div>
 
           {analysis.ambiguous && (

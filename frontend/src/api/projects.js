@@ -61,7 +61,7 @@ export async function analyzeProject(projectId, columns = []) {
       validation: { warnings: [] },
     };
   }
-  const { data } = await api.post(ENDPOINTS.analyzeProject(projectId));
+  const { data } = await api.post(ENDPOINTS.analyzeProject(projectId), null, { timeout: 120000 });
   return data;
 }
 

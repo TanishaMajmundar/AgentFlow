@@ -276,7 +276,8 @@ def detect_target(df: pd.DataFrame, problem_statement: str = "") -> dict:
 
     scored.sort(key=lambda r: (-r[0], -r[1]))     # ties: later column wins
 
-    base = {"source": "rules", "columns": profile}
+    base = {"source": "rules", "columns": profile, "shortlist": [c for _, _, c, _ in scored[:12]]}
+    
     if not scored:
         return {**base, "recommended": None, "confidence": 0.0, "ambiguous": True,
                 "reason": "No column in this file looks usable as a prediction target.",
