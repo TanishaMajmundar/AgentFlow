@@ -30,7 +30,7 @@ def _agent_output(key, out, metric):
         return {
             "problem_type": out.get("problem_type"),
             "models": out.get("models", []),
-            "primary_metric": out.get("primary_metric"),
+            "primary_metric": out.get("primary_metric_label") or out.get("primary_metric"),
         }
     if key == "training":
         return {"results": [
@@ -74,6 +74,7 @@ def build_results(wf):
     strat = res.get("ml_strategy_agent") or {}
     train = res.get("training_agent") or {}
     metric = strat.get("primary_metric")
+    label = strat.get("primary_metric_label") or metric
 
     models = []
     for r in train.get("results", []):
@@ -84,7 +85,7 @@ def build_results(wf):
     best = wf.get("final_model")
     final = None
     if best:
-        final = {"name": best.get("model_name"), "score": _score(best, metric), "metric": metric}
+        final = {"name": best.get("model_name"), "score": _score(best, metric), "metric": label}
 
     return {
         "project_id": wf.get("project_id", wf["workflow_id"]),
@@ -103,7 +104,7 @@ def build_results(wf):
         },
         "strategy": {
             "problem_type": strat.get("problem_type"),
-            "primary_metric": metric,
+            "primary_metric": label,
             "models": strat.get("models", []),
         },
         "models": models,

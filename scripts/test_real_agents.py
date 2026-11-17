@@ -35,3 +35,16 @@ print("\n=== ORCHESTRATOR SELECTION ===")
 best = select_best_model(t["results"], s["primary_metric"])
 print("primary metric:", s["primary_metric"])
 print("BEST MODEL    :", best["model_name"] if best else None, (best or {}).get("metrics"))
+
+print("\n=== PACKAGING best_model.pkl ===")
+import joblib
+import pandas as pd
+from backend.services.model_packager import package_best_model
+
+path = package_best_model("TEST_PKG", d, s, best)
+print("saved:", path)
+model = joblib.load(path)
+raw = pd.read_csv(a.file).head(5)
+print("predicted:", list(model.predict(raw)))
+if a.target in raw.columns:
+    print("actual   :", raw[a.target].tolist())

@@ -84,6 +84,7 @@ def real_data_agent(dataset_path, target_column, problem_statement=""):
         "train_rows": report.leakage_report.train_rows,
         "test_rows": report.leakage_report.test_rows,
         "final_feature_count": report.preprocessing_summary.features_count_final,
+        "raw_feature_columns": [c.name for c in feats],
         "target_stats": {"min": tprof.min_val if tprof else None,
                          "max": tprof.max_val if tprof else None,
                          "mean": tprof.mean if tprof else None},
