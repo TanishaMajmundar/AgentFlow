@@ -37,11 +37,18 @@ app.add_middleware(
 repo = Repository()
 try:
     from backend.agents.real_data_agent import real_data_agent
-except Exception as e:   # missing packages etc.: fall back to the mock so the API still starts
-    print(f"[AgentFlow] Real Data Agent unavailable, using the mock instead: {e}")
-    real_data_agent = None
+    from backend.agents.real_strategy_agent import real_strategy_agent
+    from backend.agents.real_training_agent import real_training_agent
+except Exception as e:   # missing package etc.: fall back to the mocks so the API still starts
+    print(f"[AgentFlow] Real agents unavailable, using mocks instead: {e}")
+    real_data_agent = real_strategy_agent = real_training_agent = None
 
-orchestrator = AgentFlowOrchestrator(repo=repo, data_agent=real_data_agent)
+orchestrator = AgentFlowOrchestrator(
+    repo=repo,
+    data_agent=real_data_agent,
+    strategy_agent=real_strategy_agent,
+    training_agent=real_training_agent,
+)
 
 
 @app.on_event("startup")

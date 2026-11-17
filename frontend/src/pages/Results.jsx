@@ -133,7 +133,7 @@ export default function Results() {
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={models} layout="vertical" margin={{ top: 0, right: 40, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke={chart.grid} horizontal={false} />
-              <XAxis type="number" domain={[0, 1]} tick={{ fill: chart.tick, fontSize: 10.5 }} axisLine={false} tickLine={false} />
+              <XAxis type="number" domain={[Math.min(0, ...models.map((m) => m.score)), 1]} tick={{ fill: chart.tick, fontSize: 10.5 }} axisLine={false} tickLine={false} />
               <YAxis type="category" dataKey="name" width={150} tick={{ fill: chart.label, fontSize: 11.5 }} axisLine={false} tickLine={false} />
               <Tooltip
                 cursor={{ fill: chart.cursor }}

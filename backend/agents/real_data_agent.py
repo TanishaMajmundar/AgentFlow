@@ -63,9 +63,11 @@ def real_data_agent(dataset_path, target_column, problem_statement=""):
     numeric = sum(1 for c in feats
                   if c.inferred_semantic_type in ("continuous_numeric", "categorical_numeric"))
     missing_total = sum(c.missing_count for c in report.column_profiles)
+    tprof = next((c for c in report.column_profiles if c.name == t.selected_target), None)
 
     return {
         "is_mock": False,
+        "run_id": stem,
         "dataset_path": str(dataset_path),
         "target_column": t.selected_target,
         "problem_type": "regression" if t.inferred_problem_type == "regression" else "classification",
@@ -82,6 +84,9 @@ def real_data_agent(dataset_path, target_column, problem_statement=""):
         "train_rows": report.leakage_report.train_rows,
         "test_rows": report.leakage_report.test_rows,
         "final_feature_count": report.preprocessing_summary.features_count_final,
+        "target_stats": {"min": tprof.min_val if tprof else None,
+                         "max": tprof.max_val if tprof else None,
+                         "mean": tprof.mean if tprof else None},
         # list form (not a dict) so class labels like "1.0" are never used as Mongo keys
         "class_distribution": [{"label": k, "count": v}
                                for k, v in (t.class_distribution or {}).items()],
