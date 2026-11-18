@@ -94,3 +94,20 @@ export async function getDataReport(projectId) {
   const { data } = await api.get(ENDPOINTS.dataReport(projectId));
   return data;
 }
+
+export async function getModelInfo(projectId) {
+  if (USE_MOCK) return null;
+  const { data } = await api.get(ENDPOINTS.modelInfo(projectId));
+  return data;
+}
+
+export async function downloadModel(projectId, filename = "best_model.pkl") {
+  if (USE_MOCK) throw new Error("Model download needs the real backend (VITE_USE_MOCK=false).");
+  const res = await api.get(ENDPOINTS.modelDownload(projectId), { responseType: "blob", timeout: 120000 });
+  const url = URL.createObjectURL(res.data);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}

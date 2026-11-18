@@ -15,6 +15,7 @@ import { useChartColors, useTheme } from "../context/ThemeContext";
 import CountUp from "../components/CountUp";
 import Reveal from "../components/Reveal";
 import DataReport from "../components/DataReport";
+import ModelCard from "../components/ModelCard";
 
 const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : "—");
 
@@ -199,6 +200,9 @@ export default function Results() {
           ) : <p className="text-sm text-dim">No preprocessing steps were reported.</p>}
         </section>
       </div></Reveal>
+      {data.model_available && (
+        <Reveal><ModelCard projectId={projectId} projectName={data.project_name} /></Reveal>
+      )}      
       <Reveal><DataReport projectId={projectId} /></Reveal>
       <Reveal><div className="mt-8 flex flex-wrap gap-3 print:hidden">
         <Link to="/projects" className="btn-ghost"><ArrowLeft size={14} /> All projects</Link>

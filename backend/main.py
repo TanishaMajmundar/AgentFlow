@@ -4,7 +4,8 @@ from pathlib import Path
 from pydantic import BaseModel
 from fastapi import FastAPI, UploadFile, File, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
-
+import re
+from fastapi.responses import FileResponse
 from backend.database import init_db
 from backend.repository import Repository
 from backend.services.dataset_service import save_dataset
@@ -320,3 +321,42 @@ def project_data_report(project_id: str):
             "collinear_removed": lk.get("high_collinearity_dropped", []),
         },
     }
+    
+MODELS_ROOT = (Path(__file__).resolve().parent / "storage" / "models").resolve()
+
+
+def _model_file(wf):
+    p = wf.get("model_path")
+    if not p:
+        raise HTTPException(
+            status_code=404,
+            detail=wf.get("model_error") or "No trained model file exists for this project.")
+    path = Path(p).resolve()
+    # never serve anything outside the models folder
+    if not path.is_relative_to(MODELS_ROOT) or not path.is_file():
+        raise HTTPException(status_code=404, detail="Model file not found.")
+    return path
+
+
+@app.get("/projects/{project_id}/model/download")
+def download_model(project_id: str):
+    wf = orchestrator.get_workflow_status(project_id)
+    if wf is None:
+        raise HTTPException(status_code=404, detail="Project not found")
+    if wf["status"] != "completed":
+        raise HTTPException(status_code=409, detail="The model is not ready yet.")
+    path = _model_file(wf)
+    safe = re.sub(r"\W+", "_", wf.get("project_name") or "model").strip("_").lower() or "model"
+    return FileResponse(path, media_type="application/octet-stream",
+                        filename=f"{safe}_best_model.pkl")
+
+
+@app.get("/projects/{project_id}/model/info")
+def model_info(project_id: str):
+    wf = orchestrator.get_workflow_status(project_id)
+    if wf is None:
+        raise HTTPException(status_code=404, detail="Project not found")
+    info_path = _model_file(wf).with_name("model_info.json")
+    if not info_path.is_file():
+        raise HTTPException(status_code=404, detail="Model info not found.")
+    return json.loads(info_path.read_text(encoding="utf-8"))

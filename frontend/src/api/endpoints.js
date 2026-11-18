@@ -10,4 +10,6 @@ export const ENDPOINTS = {
   workflowStatus: (id) => `/projects/${id}/status`,   // GET
   workflowResults: (id) => `/projects/${id}/results`, // GET (409 until finished)
   dataReport: (id) => `/projects/${id}/data-report`, // GET
+  modelDownload: (id) => `/projects/${id}/model/download`, // GET (file)
+  modelInfo: (id) => `/projects/${id}/model/info`,         // GET
 };

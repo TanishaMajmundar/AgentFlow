@@ -109,4 +109,6 @@ def build_results(wf):
         },
         "models": models,
         "final_model": final,
+        "model_available": bool(wf.get("model_path")),
+        "model_error": wf.get("model_error"),
     }
