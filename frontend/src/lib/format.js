@@ -45,3 +45,17 @@ export function summarizeAgentOutput(key, output) {
   }
   return lines;
 }
+
+/** "just now", "5 min ago", "3 h ago", "2 d ago", otherwise a short date. */
+export function timeAgo(iso) {
+  if (!iso) return "";
+  const diff = Date.now() - new Date(iso).getTime();
+  const min = Math.floor(diff / 60000);
+  if (min < 1) return "just now";
+  if (min < 60) return `${min} min ago`;
+  const h = Math.floor(min / 60);
+  if (h < 24) return `${h} h ago`;
+  const d = Math.floor(h / 24);
+  if (d < 7) return `${d} d ago`;
+  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}

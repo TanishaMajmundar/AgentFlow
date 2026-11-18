@@ -38,13 +38,13 @@ export default function PipelineFlow({ states, compact = false }) {
           {!ambient && (
             <div
               className="absolute left-0 top-0 h-px transition-all duration-1000 ease-out"
-              style={{ width: `${fillPct}%`, background: rgb(DONE_TOKEN), boxShadow: `0 0 8px ${rgb(DONE_TOKEN, 0.6)}` }}
+              style={{ width: `${fillPct}%`, background: rgb(DONE_TOKEN) }}
             />
           )}
           {ambient && (
             <span
               className="absolute -mt-1 h-2 w-2 animate-travel rounded-full"
-              style={{ top: 0, background: rgb("brand"), boxShadow: `0 0 14px 3px ${rgb("brand", 0.8)}` }}
+              style={{ top: 0, background: rgb("brand") }}
             />
           )}
         </div>
@@ -92,7 +92,7 @@ export function PipelineVertical() {
         <div className="absolute bottom-0 left-[19px] top-0 w-px bg-line">
           <span
             className="absolute -ml-[3.5px] h-2 w-2 animate-travel-v rounded-full"
-            style={{ left: 0, background: rgb("brand"), boxShadow: `0 0 14px 3px ${rgb("brand", 0.8)}` }}
+            style={{ left: 0, background: rgb("brand") }}
           />
         </div>
         {NODES.map((n, i) => {

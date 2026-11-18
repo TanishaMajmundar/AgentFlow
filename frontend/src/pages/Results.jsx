@@ -16,6 +16,7 @@ import CountUp from "../components/CountUp";
 import Reveal from "../components/Reveal";
 import DataReport from "../components/DataReport";
 import ModelCard from "../components/ModelCard";
+import { useState } from "react";
 
 const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : "—");
 
@@ -33,6 +34,7 @@ export default function Results() {
   const { projectId } = useParams();
   const chart = useChartColors();
   const { theme, setTheme } = useTheme();
+  const [narrow] = useState(() => typeof window !== "undefined" && window.innerWidth < 640);
   const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
     queryKey: ["results", projectId],
     queryFn: () => getWorkflowResults(projectId),
@@ -48,7 +50,7 @@ export default function Results() {
   if (isError) {
     const status = getErrorStatus(error);
     return (
-      <main className="mx-auto max-w-6xl px-6 py-10">
+      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-8 md:py-10">
         {Back}
         <div className="mt-8">
           <ErrorState
@@ -70,7 +72,7 @@ export default function Results() {
 
   if (isLoading || !data) {
     return (
-      <main className="mx-auto max-w-6xl px-6 py-10" aria-busy="true">
+      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-8 md:py-10" aria-busy="true">
         {Back}
         <Skeleton className="mt-6 h-8 w-64" />
         <div className="mt-6 flex gap-4"><Skeleton className="h-24 flex-1" /><Skeleton className="h-24 flex-1" /><Skeleton className="h-24 flex-1" /></div>
@@ -97,7 +99,7 @@ export default function Results() {
   }
 
   return (
-    <main className="mx-auto max-w-6xl px-6 py-10">
+    <main className="mx-auto max-w-6xl px-4 py-8 sm:px-8 md:py-10">
       {Back}
 
       <div className="mt-5 flex flex-wrap items-start justify-between gap-4 animate-fade-in">
@@ -132,10 +134,12 @@ export default function Results() {
         </div>
         <div style={{ height: chartHeight }} role="img" aria-label={`Bar chart comparing ${models.length} models by ${best.metric}`}>
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={models} layout="vertical" margin={{ top: 0, right: 40, left: 0, bottom: 0 }}>
+            <BarChart data={models} layout="vertical" margin={{ top: 0, right: narrow ? 34 : 40, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke={chart.grid} horizontal={false} />
               <XAxis type="number" domain={[Math.min(0, ...models.map((m) => m.score)), 1]} tick={{ fill: chart.tick, fontSize: 10.5 }} axisLine={false} tickLine={false} />
-              <YAxis type="category" dataKey="name" width={150} tick={{ fill: chart.label, fontSize: 11.5 }} axisLine={false} tickLine={false} />
+              <YAxis type="category" dataKey="name" width={narrow ? 104 : 170}
+                tickFormatter={(v) => (v.length > (narrow ? 15 : 26) ? v.slice(0, narrow ? 14 : 25) + "…" : v)}
+                tick={{ fill: chart.label, fontSize: 11.5 }} axisLine={false} tickLine={false} />
               <Tooltip
                 cursor={{ fill: chart.cursor }}
                 formatter={(v) => [formatScore(v), best.metric]}

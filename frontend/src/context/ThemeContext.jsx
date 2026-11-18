@@ -6,21 +6,21 @@ const ThemeContext = createContext(null);
 
 // Real hex values for places that can't use CSS variables (Recharts SVG props).
 const CHART = {
-  dark: {
-    brand: "#6C7CFF", grid: "#1B212B", tick: "#5B6472", label: "#8992A3",
-    idleBar: "#2B3341", tooltipBg: "#171C25", tooltipBorder: "#232A35", ink: "#E9EDF4", cursor: "rgba(255,255,255,0.05)",
-  },
   light: {
-    brand: "#4F5BE8", grid: "#E6E9F1", tick: "#70798C", label: "#5A6478",
-    idleBar: "#CBD2E0", tooltipBg: "#FFFFFF", tooltipBorder: "#DDE2EC", ink: "#11151F", cursor: "rgba(15,23,42,0.05)",
+    brand: "#6B4226", grid: "#E5DCCB", tick: "#7A6A5A", label: "#685849",
+    idleBar: "#D3C4AB", tooltipBg: "#FBF7EF", tooltipBorder: "#DED3C0", ink: "#2B1E16", cursor: "rgba(43,30,22,0.05)",
+  },
+  dark: {
+    brand: "#D9A56E", grid: "#2E231B", tick: "#8A7968", label: "#B3A18D",
+    idleBar: "#4A392D", tooltipBg: "#291F18", tooltipBorder: "#3E3026", ink: "#F1E8DA", cursor: "rgba(255,255,255,0.05)",
   },
 };
 
-const readTheme = () => (document.documentElement.dataset.theme === "light" ? "light" : "dark");
+const readTheme = () => (document.documentElement.dataset.theme === "dark" ? "dark" : "light");
 
 function applyTheme(theme) {
   document.documentElement.dataset.theme = theme;
-  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "light" ? "#F6F7FB" : "#0A0D12");
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "dark" ? "#17110D" : "#F5EFE4");
   try { localStorage.setItem(KEY, theme); } catch { /* storage unavailable — theme just won't persist */ }
 }
 

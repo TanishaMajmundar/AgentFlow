@@ -141,89 +141,93 @@ export default function CreateProject() {
     const showWarnings = Boolean(analysis.validation?.warnings?.length) && target === rec;
 
     return (
-      <main className="mx-auto max-w-3xl px-6 py-10">
+      <main className="mx-auto max-w-5xl px-4 py-8 sm:px-8 md:py-12">
         <button type="button" disabled={busy} onClick={() => setPhase("form")}
           className="inline-flex items-center gap-1.5 text-sm text-muted transition hover:text-ink">
           <ArrowLeft size={14} /> Back
         </button>
 
-        <div className="card mt-4 animate-fade-in rounded-2xl p-8">
+        <div className="card mt-4 animate-fade-in p-5 sm:p-8">
           <h1 className="font-display text-[22px] font-semibold">Confirm the target column</h1>
           <p className="mt-1.5 text-sm text-muted">
             AgentFlow read your problem statement and dataset and suggests what to predict. Change it if it's wrong.
           </p>
 
-          <div className="mt-6 rounded-xl border border-brand/30 bg-brand/5 p-5">
-            <div className="flex items-center gap-2 font-mono text-[11px] text-brand">
-              <Sparkles size={13} /> RECOMMENDED TARGET
-            </div>
-            <div className="mt-2 font-display text-xl font-semibold">{rec ?? "No clear recommendation"}</div>
-            <div className="mt-1 flex flex-wrap gap-x-4 font-mono text-[11px] text-dim">
-              {analysis.problem_type && <span>{analysis.problem_type.replace(/_/g, " ")}</span>}
-              {rec && <span>confidence {conf}%</span>}
-            </div>
-            <p className="mt-3 text-sm leading-relaxed text-muted">{analysis.reason}</p>
-            {analysis.llm && !analysis.llm.error && (
-              <p className="mt-2 font-mono text-[11px] text-dim">
-                Checked by {analysis.llm.model} ·{" "}
-                {analysis.llm.agrees_with_rules ? "agrees with rule-based scoring" : "differs from rule-based scoring"}
-              </p>
-            )}            
-          </div>
-
-          {analysis.ambiguous && (
-            <div role="status" className="mt-4 flex items-start gap-2 rounded-lg border border-training/40 bg-training/10 px-3.5 py-2.5 text-sm text-training">
-              <AlertTriangle size={15} className="mt-0.5 shrink-0" />
-              <span>AgentFlow isn't fully sure about this one. Please check the column below.</span>
-            </div>
-          )}
-
-          <div className="mt-6">
-            <label htmlFor="target" className="label-mono mb-2 block">Target column</label>
-            <div className="relative">
-              <select id="target" value={target} disabled={busy}
-                onChange={(e) => { setTarget(e.target.value); clearError("target"); }}
-                className={`input appearance-none pr-10 ${errors.target ? "input-error" : ""}`}>
-                <option value="">Select a column…</option>
-                {columns.map((c) => (
-                  <option key={c.name} value={c.name} disabled={!c.usable}>
-                    {c.name}{c.name === rec ? "  ★ recommended" : ""}{!c.usable ? `  (${c.note})` : ""}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown size={15} className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-dim" />
-            </div>
-            {errors.target && <p role="alert" className="mt-1.5 text-xs text-danger">{errors.target}</p>}
-          </div>
-
-          {analysis.alternatives?.length > 0 && (
-            <div className="mt-4">
-              <span className="label-mono mb-2 block">Other candidates</span>
-              <div className="flex flex-wrap gap-2">
-                {analysis.alternatives.map((a) => (
-                  <button key={a.column} type="button" disabled={busy}
-                    onClick={() => { setTarget(a.column); clearError("target"); }}
-                    className={`rounded-full border px-3 py-1 font-mono text-[11px] transition ${
-                      target === a.column
-                        ? "border-brand bg-brand/10 text-brand"
-                        : "border-line text-muted hover:border-line2 hover:text-ink"
-                    }`}>
-                    {a.column}
-                  </button>
-                ))}
+          <div className="mt-7 grid gap-8 lg:grid-cols-2">
+            <div className="flex flex-col gap-4">
+              <div className="rounded-xl border border-brand/30 bg-brand/5 p-5">
+                <div className="label-mono flex items-center gap-2 !text-brand">
+                  <Sparkles size={13} /> Recommended target
+                </div>
+                <div className="mt-2 break-words font-display text-xl font-semibold">{rec ?? "No clear recommendation"}</div>
+                <div className="mt-1 flex flex-wrap gap-x-4 font-mono text-[11px] text-dim">
+                  {analysis.problem_type && <span>{analysis.problem_type.replace(/_/g, " ")}</span>}
+                  {rec && <span>confidence {conf}%</span>}
+                </div>
+                <p className="mt-3 text-sm leading-relaxed text-muted">{analysis.reason}</p>
+                {analysis.llm && !analysis.llm.error && (
+                  <p className="mt-2 font-mono text-[11px] text-dim">
+                    Checked by {analysis.llm.model} ·{" "}
+                    {analysis.llm.agrees_with_rules ? "agrees with rule-based scoring" : "differs from rule-based scoring"}
+                  </p>
+                )}
               </div>
-            </div>
-          )}
 
-          {showWarnings && (
-            <ul className="mt-4 flex flex-col gap-1.5">
-              {analysis.validation.warnings.map((w, i) => (
-                <li key={i} className="flex items-start gap-2 text-xs text-muted">
-                  <AlertTriangle size={13} className="mt-0.5 shrink-0 text-training" /> {w}
-                </li>
-              ))}
-            </ul>
-          )}
+              {analysis.ambiguous && (
+                <div role="status" className="flex items-start gap-2 rounded-lg border border-training/40 bg-training/10 px-3.5 py-2.5 text-sm text-training">
+                  <AlertTriangle size={15} className="mt-0.5 shrink-0" />
+                  <span>AgentFlow isn't fully sure about this one. Please check the column on the right.</span>
+                </div>
+              )}
+
+              {showWarnings && (
+                <ul className="flex flex-col gap-1.5">
+                  {analysis.validation.warnings.map((w, i) => (
+                    <li key={i} className="flex items-start gap-2 text-xs text-muted">
+                      <AlertTriangle size={13} className="mt-0.5 shrink-0 text-training" /> {w}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="target" className="label-mono mb-2 block">Target column</label>
+              <div className="relative">
+                <select id="target" value={target} disabled={busy}
+                  onChange={(e) => { setTarget(e.target.value); clearError("target"); }}
+                  className={`input appearance-none pr-10 ${errors.target ? "input-error" : ""}`}>
+                  <option value="">Select a column…</option>
+                  {columns.map((c) => (
+                    <option key={c.name} value={c.name} disabled={!c.usable}>
+                      {c.name}{c.name === rec ? "  ★ recommended" : ""}{!c.usable ? `  (${c.note})` : ""}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown size={15} className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-dim" />
+              </div>
+              {errors.target && <p role="alert" className="mt-1.5 text-xs text-danger">{errors.target}</p>}
+
+              {analysis.alternatives?.length > 0 && (
+                <div className="mt-5">
+                  <span className="label-mono mb-2 block">Other candidates</span>
+                  <div className="flex flex-wrap gap-2">
+                    {analysis.alternatives.map((a) => (
+                      <button key={a.column} type="button" disabled={busy}
+                        onClick={() => { setTarget(a.column); clearError("target"); }}
+                        className={`rounded-full border px-3 py-1 font-mono text-[11px] transition ${
+                          target === a.column
+                            ? "border-brand bg-brand/10 text-brand"
+                            : "border-line text-muted hover:border-line2 hover:text-ink"
+                        }`}>
+                        {a.column}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
 
           {submitError && (
             <p role="alert" className="mt-6 rounded-lg border border-danger/40 bg-danger/10 px-3.5 py-2.5 text-sm text-danger">
@@ -233,9 +237,12 @@ export default function CreateProject() {
 
           {busy && <ProgressBar stage={stage} progress={progress} />}
 
-          <button type="button" onClick={onConfirm} disabled={busy} className="btn-primary mt-7 w-full !py-3">
-            {busy ? STAGE_LABEL[stage] : <>Confirm &amp; start AgentFlow <ArrowRight size={15} className="nudge" /></>}
-          </button>
+          <div className="mt-8 flex justify-end">
+            <button type="button" onClick={onConfirm} disabled={busy}
+              className="btn-primary w-full !py-3 sm:w-auto sm:min-w-[300px]">
+              {busy ? STAGE_LABEL[stage] : <>Confirm &amp; start AgentFlow <ArrowRight size={15} className="nudge" /></>}
+            </button>
+          </div>
         </div>
       </main>
     );
@@ -243,32 +250,34 @@ export default function CreateProject() {
 
   /* -------------------------------- form screen ------------------------------- */
   return (
-    <main className="mx-auto max-w-3xl px-6 py-10">
+    <main className="mx-auto max-w-5xl px-4 py-8 sm:px-8 md:py-12">
       <Link to="/projects" className="inline-flex items-center gap-1.5 text-sm text-muted transition hover:text-ink">
         <ArrowLeft size={14} /> Projects
       </Link>
 
-      <form onSubmit={onAnalyze} noValidate className="card mt-4 animate-fade-in rounded-2xl p-8">
+      <form onSubmit={onAnalyze} noValidate className="card mt-4 animate-fade-in p-5 sm:p-8">
         <h1 className="font-display text-[22px] font-semibold">Create new ML project</h1>
         <p className="mt-1.5 text-sm text-muted">
           Tell AgentFlow what you're trying to predict, and give it the data to work with.
         </p>
 
-        <div className="stagger mt-7 flex flex-col gap-5">
-          <div>
-            <label htmlFor="name" className="label-mono mb-2 block">Project name</label>
-            <input id="name" className={`input ${errors.name ? "input-error" : ""}`} value={name} disabled={busy}
-              onChange={(e) => { setName(e.target.value); clearError("name"); resetProject(); }}
-              placeholder="e.g. Customer Churn Prediction" />
-            {errors.name && <p role="alert" className="mt-1.5 text-xs text-danger">{errors.name}</p>}
-          </div>
+        <div className="stagger mt-7 grid gap-x-8 gap-y-5 lg:grid-cols-2">
+          <div className="flex flex-col gap-5">
+            <div>
+              <label htmlFor="name" className="label-mono mb-2 block">Project name</label>
+              <input id="name" className={`input ${errors.name ? "input-error" : ""}`} value={name} disabled={busy}
+                onChange={(e) => { setName(e.target.value); clearError("name"); resetProject(); }}
+                placeholder="e.g. Customer Churn Prediction" />
+              {errors.name && <p role="alert" className="mt-1.5 text-xs text-danger">{errors.name}</p>}
+            </div>
 
-          <div>
-            <label htmlFor="problem" className="label-mono mb-2 block">Problem statement</label>
-            <textarea id="problem" rows={3} className={`input resize-none ${errors.problem ? "input-error" : ""}`} value={problem} disabled={busy}
-              onChange={(e) => { setProblem(e.target.value); clearError("problem"); resetProject(); }}
-              placeholder="Predict whether a customer will leave the company based on their account information and usage patterns." />
-            {errors.problem && <p role="alert" className="mt-1.5 text-xs text-danger">{errors.problem}</p>}
+            <div>
+              <label htmlFor="problem" className="label-mono mb-2 block">Problem statement</label>
+              <textarea id="problem" rows={4} className={`input resize-none ${errors.problem ? "input-error" : ""}`} value={problem} disabled={busy}
+                onChange={(e) => { setProblem(e.target.value); clearError("problem"); resetProject(); }}
+                placeholder="Predict whether a customer will leave the company based on their account information and usage patterns." />
+              {errors.problem && <p role="alert" className="mt-1.5 text-xs text-danger">{errors.problem}</p>}
+            </div>
           </div>
 
           <div>
@@ -277,7 +286,7 @@ export default function CreateProject() {
           </div>
 
           {preview && (
-            <div className="animate-fade-in">
+            <div className="animate-fade-in lg:col-span-2">
               <div className="overflow-x-auto rounded-lg border border-line">
                 <table className="w-full border-collapse font-mono text-[11px]">
                   <thead>
@@ -311,9 +320,11 @@ export default function CreateProject() {
 
         {busy && <ProgressBar stage={stage} progress={progress} />}
 
-        <button type="submit" disabled={busy} className="btn-primary mt-7 w-full !py-3">
-          {busy ? STAGE_LABEL[stage] : <>Analyze dataset <ArrowRight size={15} className="nudge" /></>}
-        </button>
+        <div className="mt-8 flex justify-end">
+          <button type="submit" disabled={busy} className="btn-primary w-full !py-3 sm:w-auto sm:min-w-[260px]">
+            {busy ? STAGE_LABEL[stage] : <>Analyze dataset <ArrowRight size={15} className="nudge" /></>}
+          </button>
+        </div>
       </form>
     </main>
   );

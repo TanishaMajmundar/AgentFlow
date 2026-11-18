@@ -32,7 +32,7 @@ export default function Workflow() {
   if (isError) {
     const notFound = getErrorStatus(error) === 404;
     return (
-      <main className="mx-auto max-w-5xl px-6 py-10">
+      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-8 md:py-10">
         {Back}
         <div className="mt-8">
           <ErrorState
@@ -53,7 +53,7 @@ export default function Workflow() {
 
   if (isLoading || !data) {
     return (
-      <main className="mx-auto max-w-5xl px-6 py-10" aria-busy="true">
+      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-8 md:py-10" aria-busy="true">
         {Back}
         <Skeleton className="mt-6 h-[110px]" />
         <div className="mt-5 flex flex-col gap-4">
@@ -75,7 +75,7 @@ export default function Workflow() {
   };
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-10">
+    <main className="mx-auto max-w-6xl px-4 py-8 sm:px-8 md:py-10">
       {Back}
 
       <div className="mt-5 flex flex-wrap items-start justify-between gap-3">
@@ -86,7 +86,7 @@ export default function Workflow() {
         <StatusBadge status={data.state} />
       </div>
 
-      <div className="card mt-6 rounded-2xl px-8 py-5">
+      <div className="card mt-6 rounded-2xl px-3 py-5 sm:px-8">
         <PipelineFlow states={states} />
       </div>
 

@@ -42,8 +42,8 @@ export default function AgentCard({ meta, agent }) {
             : status === "error" ? <AlertTriangle size={16} />
             : <Icon size={16} />}
         </span>
-        <span className={`font-mono text-xs font-medium ${idle ? "text-dim" : "text-ink"}`}>{meta.tag}</span>
-        <span className="ml-auto font-mono text-[10px]" style={{ color: idle ? rgb("dim") : rgb(token) }}>
+        <span className={`font-mono text-[11.5px] uppercase ${idle ? "text-dim" : "text-ink"}`}>{meta.label}</span>
+        <span className="ml-auto font-mono text-[10px] uppercase" style={{ color: idle ? rgb("dim") : rgb(token) }}>
           {STATUS_LABEL[status]}
         </span>
       </div>
