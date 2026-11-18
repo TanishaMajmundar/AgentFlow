@@ -1,9 +1,11 @@
 import csv
+import json
 from pathlib import Path
-
+from pydantic import BaseModel
 from fastapi import FastAPI, UploadFile, File, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
-
+import re
+from fastapi.responses import FileResponse
 from backend.database import init_db
 from backend.repository import Repository
 from backend.services.dataset_service import save_dataset
@@ -14,7 +16,10 @@ from backend.schemas.workflow import (
     WorkflowStatusResponse,
     WorkflowResultsResponse,
 )
+from backend.orchestrator.target_detector import detect_target, validate_target, load_dataset_frame
 
+from backend.services.frontend_adapter import build_status, build_results
+from backend.orchestrator.target_analysis import analyze_target
 
 app = FastAPI(
     title="AgentFlow Backend",
@@ -31,7 +36,20 @@ app.add_middleware(
 )
 
 repo = Repository()
-orchestrator = AgentFlowOrchestrator(repo=repo)
+try:
+    from backend.agents.real_data_agent import real_data_agent
+    from backend.agents.real_strategy_agent import real_strategy_agent
+    from backend.agents.real_training_agent import real_training_agent
+except Exception as e:   # missing package etc.: fall back to the mocks so the API still starts
+    print(f"[AgentFlow] Real agents unavailable, using mocks instead: {e}")
+    real_data_agent = real_strategy_agent = real_training_agent = None
+
+orchestrator = AgentFlowOrchestrator(
+    repo=repo,
+    data_agent=real_data_agent,
+    strategy_agent=real_strategy_agent,
+    training_agent=real_training_agent,
+)
 
 
 @app.on_event("startup")
@@ -103,3 +121,242 @@ def get_workflow_results(workflow_id: str):
 @app.get("/workflows")
 def list_workflows():
     return repo.list_workflows()
+
+
+class ProjectCreate(BaseModel):
+    name: str
+    problem_statement: str
+
+
+@app.post("/projects")
+def create_project(body: ProjectCreate):
+    wf = orchestrator.create_project(body.name.strip(), body.problem_statement.strip())
+    return {"project_id": wf["workflow_id"]}
+
+
+@app.post("/projects/{project_id}/dataset")
+def upload_project_dataset(project_id: str, file: UploadFile = File(...)):
+    wf = orchestrator.get_workflow_status(project_id)
+    if wf is None:
+        raise HTTPException(status_code=404, detail="Project not found")
+    try:
+        info = save_dataset(file)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    repo.save_dataset(info)
+    wf["dataset_id"] = info["dataset_id"]
+    wf["dataset_path"] = info["dataset_path"]
+    wf["dataset_name"] = info["filename"]
+    wf["columns"] = info["columns"]
+    orchestrator.workflows[project_id] = wf   # keep it runnable even after a restart
+    repo.save_workflow(wf)
+    return info
+
+
+@app.get("/projects")
+def list_projects():
+    out = []
+    for wf in repo.list_workflows():
+        out.append({
+            "project_id": wf.get("project_id", wf["workflow_id"]),
+            "name": wf["project_name"],
+            "problem_statement": wf.get("problem_statement", ""),
+            "dataset_name": wf.get("dataset_name"),
+            "created_at": wf.get("created_at"),
+            "status": "queued" if wf["status"] == "created" else wf["status"],
+        })
+    return out
+
+
+class TargetUpdate(BaseModel):
+    target_column: str
+
+
+@app.put("/projects/{project_id}/target")
+def set_project_target(project_id: str, body: TargetUpdate):
+    wf = orchestrator.get_workflow_status(project_id)
+    if wf is None:
+        raise HTTPException(status_code=404, detail="Project not found")
+    path = wf.get("dataset_path")
+    if not path or not Path(path).is_file():
+        raise HTTPException(status_code=400, detail="Upload a dataset first")
+    target = body.target_column.strip()
+    check = validate_target(load_dataset_frame(path), target)
+    if not check["valid"]:
+        raise HTTPException(status_code=400, detail=" ".join(check["problems"]))
+    wf["target_column"] = target
+    orchestrator.workflows[project_id] = wf
+    repo.save_workflow(wf)
+    return {"project_id": project_id, "target_column": target,
+            "problem_type": check["problem_type"], "warnings": check["warnings"]}
+
+
+@app.post("/projects/{project_id}/start")
+def start_project(project_id: str, background_tasks: BackgroundTasks):
+    wf = orchestrator.get_workflow_status(project_id)
+    if wf is None:
+        raise HTTPException(status_code=404, detail="Project not found")
+    if not wf.get("dataset_path") or not Path(wf["dataset_path"]).is_file():
+        raise HTTPException(status_code=400, detail="Upload a dataset first")
+    if not wf.get("target_column"):
+        raise HTTPException(status_code=400, detail="Confirm the target column first")
+    if wf["status"] == "running":
+        raise HTTPException(status_code=409, detail="Workflow is already running")
+
+    # reset so a project can be run again after a failure
+    wf["status"] = "created"
+    wf["error"] = None
+    wf["results"] = {}
+    wf["final_model"] = None
+    wf["mock_agents"] = []
+    wf["current_agent"] = None
+    wf["agents"] = {k: "pending" for k in
+                    ("data_agent", "ml_strategy_agent", "training_agent", "final_model_selection")}
+    orchestrator.workflows[project_id] = wf
+    repo.save_workflow(wf)
+
+    background_tasks.add_task(orchestrator.run_workflow, project_id)
+    return {"project_id": project_id, "status": "started"}
+
+
+@app.post("/projects/{project_id}/analyze")
+def analyze_project(project_id: str):
+    wf = orchestrator.get_workflow_status(project_id)
+    if wf is None:
+        raise HTTPException(status_code=404, detail="Project not found")
+    path = wf.get("dataset_path")
+    if not path or not Path(path).is_file():
+        raise HTTPException(status_code=400, detail="Upload a dataset first")
+    try:
+        df = load_dataset_frame(path)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Could not read the dataset: {e}")
+    result = analyze_target(df, wf.get("problem_statement", ""))
+    wf["target_recommendation"] = result
+    orchestrator.workflows[project_id] = wf
+    repo.save_workflow(wf)
+    return result
+
+@app.get("/projects/{project_id}/status")
+def project_status(project_id: str):
+    wf = orchestrator.get_workflow_status(project_id)
+    if wf is None:
+        raise HTTPException(status_code=404, detail="Project not found")
+    return build_status(wf)
+
+
+@app.get("/projects/{project_id}/results")
+def project_results(project_id: str):
+    wf = orchestrator.get_workflow_status(project_id)
+    if wf is None:
+        raise HTTPException(status_code=404, detail="Project not found")
+    if wf["status"] != "completed":
+        raise HTTPException(status_code=409, detail=wf.get("error") or "This workflow hasn't finished yet.")
+    return build_results(wf)
+
+
+@app.delete("/projects/{project_id}")
+def delete_project(project_id: str):
+    wf = orchestrator.get_workflow_status(project_id)
+    if wf is None:
+        raise HTTPException(status_code=404, detail="Project not found")
+    if wf["status"] == "running":
+        raise HTTPException(status_code=409, detail="Cannot delete a running project")
+    orchestrator.workflows.pop(project_id, None)
+    repo.delete_workflow(project_id)
+    return {"deleted": project_id}
+
+@app.get("/projects/{project_id}/data-report")
+def project_data_report(project_id: str):
+    wf = orchestrator.get_workflow_status(project_id)
+    if wf is None:
+        raise HTTPException(status_code=404, detail="Project not found")
+    data = (wf.get("results") or {}).get("data_agent") or {}
+    report_path = (data.get("artifacts") or {}).get("report")
+    if not report_path or not Path(report_path).is_file():
+        raise HTTPException(
+            status_code=404,
+            detail="No data report for this project (the Data Agent has not finished, or it ran in mock mode).")
+    rep = json.loads(Path(report_path).read_text(encoding="utf-8"))
+
+    h, t = rep["health_metrics"], rep["target_report"]
+    v, p, lk = rep["visual_analytics"], rep["preprocessing_summary"], rep["leakage_report"]
+    outliers = sorted(v.get("outlier_summary", {}).items(), key=lambda kv: kv[1], reverse=True)[:6]
+    return {
+        "health": {
+            "score": h["overall_health_score"], "grade": h["health_grade"],
+            "rows": h["total_rows_raw"], "columns": h["total_cols_raw"],
+            "components": {
+                "Completeness": h["completeness_score"], "Uniqueness": h["uniqueness_score"],
+                "Outlier stability": h["outlier_stability_score"],
+                "Cardinality": h["cardinality_health_score"], "Target health": h["target_health_score"],
+            },
+            "remediations": h.get("actionable_remediations", []),
+        },
+        "target": {
+            "column": t["selected_target"], "problem_type": t["inferred_problem_type"],
+            "class_distribution": t.get("class_distribution"),
+            "imbalance_ratio": t.get("imbalance_ratio"), "is_imbalanced": t.get("is_imbalanced"),
+            "skewness": t.get("target_skewness"),
+        },
+        "correlations": [
+            {"a": c["feature_a"], "b": c["feature_b"], "value": c["correlation"]}
+            for c in v.get("top_correlations", [])[:8]
+        ],
+        "outliers": [{"column": k, "pct": val} for k, val in outliers if val > 0],
+        "preprocessing": {
+            "scaling": p["scaling_method"],
+            "encoded_columns": len(p.get("encoding_methods", {})),
+            "engineered_features": p.get("engineered_interaction_features", []),
+            "features_before": p["features_count_before_preprocess"],
+            "features_expanded": p["features_count_after_expansion"],
+            "features_final": p["features_count_final"],
+            "smote_applied": p["smote_applied"],
+            "smote_rows": p["smote_synthetic_samples_added"],
+        },
+        "leakage": {
+            "train_rows": lk["train_rows"], "test_rows": lk["test_rows"],
+            "stratified": lk["stratified_split_used"],
+            "leaky_removed": lk.get("suspicious_leaky_features_flagged", []),
+            "collinear_removed": lk.get("high_collinearity_dropped", []),
+        },
+    }
+    
+MODELS_ROOT = (Path(__file__).resolve().parent / "storage" / "models").resolve()
+
+
+def _model_file(wf):
+    p = wf.get("model_path")
+    if not p:
+        raise HTTPException(
+            status_code=404,
+            detail=wf.get("model_error") or "No trained model file exists for this project.")
+    path = Path(p).resolve()
+    # never serve anything outside the models folder
+    if not path.is_relative_to(MODELS_ROOT) or not path.is_file():
+        raise HTTPException(status_code=404, detail="Model file not found.")
+    return path
+
+
+@app.get("/projects/{project_id}/model/download")
+def download_model(project_id: str):
+    wf = orchestrator.get_workflow_status(project_id)
+    if wf is None:
+        raise HTTPException(status_code=404, detail="Project not found")
+    if wf["status"] != "completed":
+        raise HTTPException(status_code=409, detail="The model is not ready yet.")
+    path = _model_file(wf)
+    safe = re.sub(r"\W+", "_", wf.get("project_name") or "model").strip("_").lower() or "model"
+    return FileResponse(path, media_type="application/octet-stream",
+                        filename=f"{safe}_best_model.pkl")
+
+
+@app.get("/projects/{project_id}/model/info")
+def model_info(project_id: str):
+    wf = orchestrator.get_workflow_status(project_id)
+    if wf is None:
+        raise HTTPException(status_code=404, detail="Project not found")
+    info_path = _model_file(wf).with_name("model_info.json")
+    if not info_path.is_file():
+        raise HTTPException(status_code=404, detail="Model info not found.")
+    return json.loads(info_path.read_text(encoding="utf-8"))

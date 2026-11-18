@@ -38,10 +38,19 @@ class AgentFlowOrchestrator:
             "final_model": None,
             "mock_agents": [],
             "error": None,
+            "project_id": workflow_id,
+            "dataset_name": None,
+            "columns": [],
+            "target_recommendation": None,
+            "model_path": None,
         }
         self.workflows[workflow_id] = workflow
         self.repo.save_workflow(workflow)
         return workflow
+    
+    def create_project(self, project_name, problem_statement):
+        """A project is a workflow that has no dataset or target yet."""
+        return self.start_workflow(project_name, problem_statement, target_column=None)
 
     def get_workflow_status(self, workflow_id: str):
         wf = self.workflows.get(workflow_id)
@@ -89,6 +98,14 @@ class AgentFlowOrchestrator:
                 wf["agents"]["final_model_selection"] = "failed"
                 raise ValueError("No model had a valid value for the primary metric")
             wf["final_model"] = best
+            wf["model_path"] = None
+            wf.pop("model_error", None)
+            if best.get("model_path") and not data_out.get("is_mock"):
+                try:
+                    from backend.services.model_packager import package_best_model
+                    wf["model_path"] = package_best_model(wf["workflow_id"], data_out, plan, best)
+                except Exception as e:   # results stay valid; only the download is unavailable
+                    wf["model_error"] = f"Could not package best_model.pkl: {e}"            
             wf["agents"]["final_model_selection"] = "completed"
             wf["current_agent"] = None
             wf["status"] = "completed"

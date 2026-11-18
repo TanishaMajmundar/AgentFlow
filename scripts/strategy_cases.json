@@ -1,0 +1,4 @@
+[
+  {"name": "wine", "file": "backend/uploads/DS-76BF3F9E_4_wine_quality_grading.csv", "target": "quality",
+   "problem": "Predict the quality rating of red wine from its physicochemical measurements"}
+]

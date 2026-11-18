@@ -3,62 +3,64 @@
 @tailwind utilities;
 
 /* ------------------------------------------------------------------ */
-/*  THEME TOKENS — RGB channels so Tailwind alpha modifiers work       */
+/*  THEME TOKENS (RGB channels so Tailwind alpha modifiers work)       */
+/*  Light  = cream paper + walnut ink.   Dark = espresso + caramel.    */
+/*  `.scope-dark` re-applies the dark palette to any sub-tree          */
+/*  (used by the sidebar and auth panel so they stay espresso).        */
 /* ------------------------------------------------------------------ */
 :root,
-:root[data-theme="dark"] {
-  --c-void: 10 13 18;
-  --c-deep: 13 17 23;
-  --c-panel: 18 22 29;
-  --c-panel2: 23 28 37;
-  --c-line: 35 42 53;
-  --c-line2: 51 61 77;
-  --c-edge: 27 33 43;
-  --c-idle: 58 67 82;
-  --c-dash: 44 52 65;
-  --c-ink: 233 237 244;
-  --c-muted: 137 146 163;
-  --c-dim: 91 100 114;
-  --c-brand: 108 124 255;
-  --c-brand-hover: 130 145 255;
-  --c-on-brand: 10 13 18;
-  --c-data: 69 217 196;
-  --c-strategy: 185 140 255;
-  --c-training: 255 180 84;
-  --c-danger: 255 107 107;
-  --grid: rgba(255, 255, 255, 0.028);
-  --glow-opacity: 0.15;
-  --card-shadow: none;
-  --card-shadow-hover: 0 10px 30px -12px rgb(108 124 255 / 0.28);
-  color-scheme: dark;
-}
-
 :root[data-theme="light"] {
-  --c-void: 246 247 251;
-  --c-deep: 238 240 247;
-  --c-panel: 255 255 255;
-  --c-panel2: 241 243 249;
-  --c-line: 221 226 236;
-  --c-line2: 196 204 219;
-  --c-edge: 230 233 241;
-  --c-idle: 196 204 219;
-  --c-dash: 196 204 219;
-  --c-ink: 17 21 31;
-  --c-muted: 90 100 120;
-  --c-dim: 112 121 140;
-  --c-brand: 79 91 232;
-  --c-brand-hover: 62 73 205;
-  --c-on-brand: 255 255 255;
-  --c-data: 14 154 138;
-  --c-strategy: 124 77 219;
-  --c-training: 196 112 0;
-  --c-danger: 214 54 62;
-  --grid: rgba(15, 23, 42, 0.05);
-  --glow-opacity: 0.2;
-  --card-shadow: 0 1px 2px rgb(15 23 42 / 0.05), 0 6px 18px -10px rgb(15 23 42 / 0.1);
-  --card-shadow-hover: 0 14px 34px -14px rgb(79 91 232 / 0.35);
+  --c-void: 245 239 228;
+  --c-deep: 237 229 214;
+  --c-panel: 251 247 239;
+  --c-panel2: 243 236 223;
+  --c-line: 222 211 192;
+  --c-line2: 200 184 160;
+  --c-edge: 229 220 203;
+  --c-idle: 200 184 160;
+  --c-dash: 200 184 160;
+  --c-ink: 43 30 22;
+  --c-muted: 104 88 73;
+  --c-dim: 122 106 90;
+  --c-brand: 107 66 38;
+  --c-brand-hover: 84 50 27;
+  --c-on-brand: 250 244 232;
+  --c-data: 94 122 82;
+  --c-strategy: 164 84 58;
+  --c-training: 176 125 30;
+  --c-danger: 178 58 46;
+  --card-shadow: 0 1px 0 rgb(43 30 22 / 0.03), 0 18px 32px -24px rgb(43 30 22 / 0.35);
+  --card-shadow-hover: 0 1px 0 rgb(43 30 22 / 0.04), 0 22px 38px -22px rgb(107 66 38 / 0.5);
+  --grain-opacity: 0.06;
   color-scheme: light;
 }
+
+:root[data-theme="dark"],
+.scope-dark {
+  --c-void: 23 17 13;
+  --c-deep: 28 20 15;
+  --c-panel: 32 24 19;
+  --c-panel2: 41 31 24;
+  --c-line: 62 48 38;
+  --c-line2: 85 68 54;
+  --c-edge: 48 37 29;
+  --c-idle: 85 68 54;
+  --c-dash: 85 68 54;
+  --c-ink: 241 232 218;
+  --c-muted: 179 161 141;
+  --c-dim: 138 121 104;
+  --c-brand: 217 165 110;
+  --c-brand-hover: 232 184 133;
+  --c-on-brand: 26 18 12;
+  --c-data: 163 188 143;
+  --c-strategy: 217 135 106;
+  --c-training: 224 178 90;
+  --c-danger: 224 112 95;
+  --card-shadow: none;
+  --card-shadow-hover: 0 14px 30px -18px rgb(0 0 0 / 0.65);
+  color-scheme: dark;
+}
+.scope-dark { color: rgb(var(--c-ink)); }
 
 /* Shared keyframes live here (not in tailwind.config) because raw CSS below uses them directly */
 @keyframes fadeIn {
@@ -74,53 +76,57 @@
   body {
     @apply bg-void font-sans text-ink antialiased;
     margin: 0;
+    font-feature-settings: "ss01", "cv11";
   }
-  ::selection { background: rgb(var(--c-brand) / 0.3); }
+  /* soft paper grain — gives the flat colors a tactile, printed feel */
+  body::before {
+    content: "";
+    position: fixed; inset: 0; z-index: 100; pointer-events: none;
+    opacity: var(--grain-opacity);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  :root[data-theme="dark"] body::before { filter: invert(1); opacity: 0.045; }
+  ::selection { background: rgb(var(--c-brand) / 0.28); }
   :focus-visible { outline: 2px solid rgb(var(--c-brand)); outline-offset: 2px; }
+  .font-display { font-optical-sizing: auto; letter-spacing: -0.015em; }
+  /* serif headings read premium at a lighter weight than the utilities ask for */
+  .font-display.font-semibold, .font-display.font-medium { font-weight: 470; }
+  /* every UPPERCASE mono label becomes a refined small-caps sans label */
+  .font-mono.uppercase { font-family: theme("fontFamily.sans"); letter-spacing: 0.12em; font-weight: 600; }
 }
 
 @layer components {
-  .bg-grid {
-    background-image:
-      linear-gradient(to right, var(--grid) 1px, transparent 1px),
-      linear-gradient(to bottom, var(--grid) 1px, transparent 1px);
-    background-size: 42px 42px;
-  }
-  .label-mono { @apply font-mono text-[11px] uppercase tracking-wide text-muted; }
+  .label-mono { @apply font-sans text-[11px] font-semibold uppercase tracking-[0.12em] text-muted; }
 
   .input {
-    @apply w-full rounded-lg border border-line bg-panel2 px-3.5 py-2.5 text-sm text-ink
+    @apply w-full rounded-md border border-line bg-panel2 px-3.5 py-2.5 text-sm text-ink
            placeholder:text-dim transition focus:border-brand focus:outline-none
            focus:ring-[3px] focus:ring-brand/20 disabled:cursor-not-allowed disabled:opacity-50;
   }
   .input-error { @apply border-danger/70 focus:border-danger focus:ring-danger/20; }
 
   .btn-primary {
-    @apply relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-lg bg-brand px-5 py-2.5
-           text-sm font-medium text-on-brand transition duration-200 hover:bg-brand-hover active:scale-[0.97]
-           disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100;
+    @apply inline-flex items-center justify-center gap-2 rounded-md bg-brand px-5 py-2.5 text-sm
+           font-medium tracking-wide text-on-brand transition duration-200 hover:bg-brand-hover
+           active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50 disabled:active:translate-y-0;
   }
-  .btn-primary:hover:not(:disabled) { box-shadow: 0 8px 24px -8px rgb(var(--c-brand) / 0.6); }
-  /* light sweep across the button on hover */
-  .btn-primary::after {
-    content: "";
-    position: absolute; inset: 0;
-    background: linear-gradient(105deg, transparent 35%, rgb(255 255 255 / 0.28) 50%, transparent 65%);
-    transform: translateX(-120%);
-    pointer-events: none;
-  }
-  .btn-primary:hover:not(:disabled)::after { transform: translateX(120%); transition: transform .7s ease; }
-
   .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-line px-4 py-2.5
-           text-sm text-muted transition duration-200 hover:border-line2 hover:text-ink active:scale-[0.97];
+    @apply inline-flex items-center justify-center gap-2 rounded-md border border-line px-4 py-2.5
+           text-sm text-ink/80 transition duration-200 hover:border-ink/40 hover:text-ink active:translate-y-px;
   }
 
-  .card { @apply rounded-xl border border-line bg-panel; box-shadow: var(--card-shadow); }
-  .card-hover { @apply card transition duration-300 hover:-translate-y-1 hover:border-brand/40; }
+  .card { @apply rounded-lg border border-line bg-panel; box-shadow: var(--card-shadow); }
+  .card-hover { @apply card transition duration-300 hover:-translate-y-0.5 hover:border-line2; }
   .card-hover:hover { box-shadow: var(--card-shadow-hover); }
 
-  .nudge { transition: transform .2s ease; }
+  /* text link with an underline that draws in on hover */
+  .link-underline {
+    background: linear-gradient(currentColor, currentColor) 0 100% / 0 1px no-repeat;
+    transition: background-size 0.3s ease;
+  }
+  .link-underline:hover { background-size: 100% 1px; }
+
+  .nudge { transition: transform 0.2s ease; }
   .btn-primary:hover .nudge, .btn-ghost:hover .nudge { transform: translateX(3px); }
 
   .skeleton {
@@ -129,37 +135,56 @@
     animation: shimmer 1.6s linear infinite;
   }
 
-  /* entrance helpers */
   .reveal {
     opacity: 0;
-    animation: fadeIn .6s cubic-bezier(.2,.7,.2,1) forwards;
+    animation: fadeIn 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
     animation-delay: calc(var(--i, 0) * 90ms);
   }
-  .stagger > * { animation: fadeIn .5s cubic-bezier(.2,.7,.2,1) both; }
-  .stagger > *:nth-child(1) { animation-delay: .04s; }
-  .stagger > *:nth-child(2) { animation-delay: .10s; }
-  .stagger > *:nth-child(3) { animation-delay: .16s; }
-  .stagger > *:nth-child(4) { animation-delay: .22s; }
-  .stagger > *:nth-child(5) { animation-delay: .28s; }
-  .stagger > *:nth-child(6) { animation-delay: .34s; }
-  .stagger > *:nth-child(7) { animation-delay: .40s; }
-  .stagger > *:nth-child(8) { animation-delay: .46s; }
-  .stagger > *:nth-child(n+9) { animation-delay: .5s; }
+  .stagger > * { animation: fadeIn 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+  .stagger > *:nth-child(1) { animation-delay: 0.04s; }
+  .stagger > *:nth-child(2) { animation-delay: 0.1s; }
+  .stagger > *:nth-child(3) { animation-delay: 0.16s; }
+  .stagger > *:nth-child(4) { animation-delay: 0.22s; }
+  .stagger > *:nth-child(5) { animation-delay: 0.28s; }
+  .stagger > *:nth-child(6) { animation-delay: 0.34s; }
+  .stagger > *:nth-child(7) { animation-delay: 0.4s; }
+  .stagger > *:nth-child(8) { animation-delay: 0.46s; }
+  .stagger > *:nth-child(n + 9) { animation-delay: 0.5s; }
+
+  /* slim themed scrollbars (sidebar list etc.) */
+  .scroll-slim { scrollbar-width: thin; scrollbar-color: rgb(var(--c-line2)) transparent; }
 }
 
-/* Theme switch: circular reveal (View Transitions API) ... */
+/* Theme switch: circular reveal (View Transitions API) with a cross-fade fallback */
 ::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
 ::view-transition-old(root) { z-index: 1; }
 ::view-transition-new(root) { z-index: 2; }
-/* ... with a soft cross-fade fallback for browsers without it */
 .theme-fade, .theme-fade * {
-  transition: background-color .35s ease, border-color .35s ease, color .35s ease,
-              fill .35s ease, stroke .35s ease !important;
+  transition: background-color 0.35s ease, border-color 0.35s ease, color 0.35s ease,
+              fill 0.35s ease, stroke 0.35s ease !important;
 }
 
-/* printing / "save as PDF" should never capture content that is still waiting to be scrolled into view */
 @media print {
+  @page { size: A4; margin: 12mm; }
+  body::before { display: none; }
   [data-reveal], .reveal, .stagger > * { opacity: 1 !important; transform: none !important; animation: none !important; }
+  .animate-page-in, .animate-fade-in { animation: none !important; }
+
+  /* paper is always white, with the light palette */
+  :root, :root[data-theme="light"], :root[data-theme="dark"] {
+    --c-void: 255 255 255; --c-deep: 255 255 255; --c-panel: 255 255 255; --c-panel2: 247 243 236;
+    --c-line: 222 211 192; --c-line2: 200 184 160; --c-edge: 229 220 203;
+    --c-idle: 200 184 160; --c-dash: 200 184 160;
+    --c-ink: 43 30 22; --c-muted: 104 88 73; --c-dim: 122 106 90;
+    --c-brand: 107 66 38; --c-brand-hover: 84 50 27; --c-on-brand: 250 244 232;
+    --c-data: 94 122 82; --c-strategy: 164 84 58; --c-training: 176 125 30; --c-danger: 178 58 46;
+    --card-shadow: none; --card-shadow-hover: none;
+    color-scheme: light;
+  }
+  body { background: #fff !important; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .card { break-inside: avoid; box-shadow: none !important; }
+  .card.break-auto { break-inside: auto; }
 }
 
 @media (prefers-reduced-motion: reduce) {

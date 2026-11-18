@@ -11,7 +11,7 @@ export default function StatusBadge({ status }) {
   const s = MAP[status] || MAP.queued;
   return (
     <span
-      className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-mono text-[10px] transition-colors duration-500"
+      className="inline-flex items-center gap-1.5 rounded border px-2 py-0.5 text-[10px] font-semibold tracking-[0.1em] transition-colors duration-500"
       style={{ color: rgb(s.token), borderColor: rgb(s.token, 0.33), background: rgb(s.token, 0.08) }}
     >
       <span className="relative flex h-1.5 w-1.5">

@@ -1,46 +1,53 @@
-import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { LogOut, Plus } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Outlet, useLocation } from "react-router-dom";
+import { Menu, X } from "lucide-react";
 import Logo from "../Logo";
-import { useAuth } from "../../context/AuthContext";
+import Sidebar from "../Sidebar";
 import ThemeToggle from "../ThemeToggle";
 
 export default function AppLayout() {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
   const { pathname } = useLocation();
+  const [open, setOpen] = useState(false);
 
-  const navClass = ({ isActive }) =>
-    `rounded-md px-3 py-1.5 text-sm transition ${isActive ? "bg-panel2 text-ink" : "text-muted hover:text-ink"}`;
+  useEffect(() => { setOpen(false); }, [pathname]);
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e) => { if (e.key === "Escape") setOpen(false); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
 
   return (
-    <div className="bg-grid min-h-screen">
-      <header className="sticky top-0 z-30 border-b border-edge bg-void/85 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3.5">
-          <div className="flex items-center gap-8">
-            <Logo size={17} to="/projects" />
-            <nav className="hidden items-center gap-1 sm:flex" aria-label="Main">
-              <NavLink to="/projects" end className={navClass}>Projects</NavLink>
-              <NavLink to="/projects/new" className={navClass}>New project</NavLink>
-            </nav>
-          </div>
-          <div className="flex items-center gap-3">
-            <Link to="/projects/new" className="btn-primary !px-3.5 !py-2 sm:hidden" aria-label="New project">
-              <Plus size={15} />
-            </Link>
-            <span className="hidden font-mono text-xs text-muted md:inline">{user?.email}</span>
-            <ThemeToggle />
-            <button
-              onClick={() => { logout(); navigate("/"); }}
-              className="btn-ghost !px-3 !py-2 !text-xs"
-            >
-              <LogOut size={14} /> Log out
+    <div className="min-h-screen lg:flex">
+      {/* desktop sidebar */}
+      <aside className="hidden w-[280px] shrink-0 lg:block print:hidden" aria-label="Sidebar">
+        <div className="sticky top-0 h-screen"><Sidebar /></div>
+      </aside>
+
+      {/* mobile top bar */}
+      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-line bg-void/90 px-4 py-3 backdrop-blur lg:hidden print:hidden">
+        <button onClick={() => setOpen(true)} aria-label="Open projects menu" aria-expanded={open} className="btn-ghost !p-2">
+          <Menu size={18} />
+        </button>
+        <Logo size={17} to="/projects" />
+        <ThemeToggle />
+      </header>
+
+      {/* mobile drawer */}
+      {open && (
+        <div className="fixed inset-0 z-40 lg:hidden print:hidden" role="dialog" aria-modal="true" aria-label="Projects menu">
+          <button aria-label="Close menu" onClick={() => setOpen(false)} className="absolute inset-0 animate-overlay-in bg-black/50" />
+          <div className="absolute inset-y-0 left-0 w-[290px] max-w-[85vw] animate-slide-in">
+            <Sidebar onNavigate={() => setOpen(false)} />
+            <button onClick={() => setOpen(false)} aria-label="Close menu" className="absolute right-3 top-5 rounded-md p-1.5 text-muted transition hover:text-ink">
+              <X size={18} />
             </button>
           </div>
         </div>
-      </header>
-      {/* keyed by route so every page change plays the entrance animation */}
-      <div key={pathname} className="animate-page-in">
-        <Outlet />
+      )}
+
+      <div className="min-w-0 flex-1">
+        <div key={pathname} className="animate-page-in"><Outlet /></div>
       </div>
     </div>
   );

@@ -28,10 +28,12 @@ export default {
         danger: v("danger"),
       },
       fontFamily: {
-        display: ['"Space Grotesk"', "sans-serif"],
-        sans: ["Inter", "sans-serif"],
-        mono: ['"JetBrains Mono"', "monospace"],
+        display: ['"Fraunces Variable"', "Georgia", "serif"],
+        sans: ['"Instrument Sans Variable"', "system-ui", "sans-serif"],
+        mono: ['"IBM Plex Mono"', "ui-monospace", "monospace"],
       },
+      // squarer corners everywhere = more "printed", less "app template"
+      borderRadius: { sm: "3px", DEFAULT: "4px", md: "5px", lg: "7px", xl: "9px", "2xl": "12px" },
       keyframes: {
         travel: {
           "0%": { left: "0%", opacity: "0" }, "6%": { opacity: "1" },
@@ -76,6 +78,8 @@ export default {
           "100%": { transform: "scale(2.2)", opacity: "0" },
         },
         drawCheck: { to: { strokeDashoffset: "0" } },
+        slideIn: { from: { transform: "translateX(-100%)" }, to: { transform: "translateX(0)" } },
+        overlayIn: { from: { opacity: "0" }, to: { opacity: "1" } },
       },
       animation: {
         travel: "travel 5.5s linear infinite",
@@ -91,6 +95,8 @@ export default {
         sweep: "sweep 1.5s ease-in-out infinite",
         "ring-burst": "ringBurst 1.2s ease-out both",
         "draw-check": "drawCheck .5s .25s ease-out forwards",
+        "slide-in": "slideIn .32s cubic-bezier(.2,.7,.2,1) both",
+        "overlay-in": "overlayIn .25s ease both",
       },
     },
   },

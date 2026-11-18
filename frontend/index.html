@@ -3,25 +3,19 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#0A0D12" />
+    <meta name="theme-color" content="#F5EFE4" />
     <script>
       // Apply the saved theme before first paint to avoid a flash of the wrong theme.
       (function () {
         try {
           var t = localStorage.getItem("af_theme");
-          if (t !== "light" && t !== "dark") t = "dark";
+          if (t !== "light" && t !== "dark") t = "light";
           document.documentElement.dataset.theme = t;
-          if (t === "light") document.querySelector('meta[name="theme-color"]').setAttribute("content", "#F6F7FB");
-        } catch (e) { document.documentElement.dataset.theme = "dark"; }
+          if (t === "dark") document.querySelector('meta[name="theme-color"]').setAttribute("content", "#17110D");
+        } catch (e) { document.documentElement.dataset.theme = "light"; }
       })();
     </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap"
-      rel="stylesheet"
-    />
     <title>AgentFlow — Multi-Agent AutoML</title>
   </head>
   <body>

@@ -1,10 +1,15 @@
 // Single source of truth for backend routes.
-// If your FastAPI routes differ, change them HERE and nothing else.
+// Routes that need a project id are functions.
 export const ENDPOINTS = {
-  listProjects: "/projects",            // GET   -> Project[]
-  createProject: "/projects",           // POST  -> { project_id }
-  uploadDataset: "/upload-dataset",     // POST  multipart: project_id, file
-  startWorkflow: "/workflow/start",     // POST  { project_id }
-  workflowStatus: "/workflow/status",   // GET   ?project_id=
-  workflowResults: "/workflow/results", // GET   ?project_id=
+  listProjects: "/projects",                          // GET
+  createProject: "/projects",                         // POST { name, problem_statement }
+  uploadDataset: (id) => `/projects/${id}/dataset`,   // POST multipart: file
+  analyzeProject: (id) => `/projects/${id}/analyze`,  // POST -> target recommendation
+  setTarget: (id) => `/projects/${id}/target`,        // PUT { target_column }
+  startWorkflow: (id) => `/projects/${id}/start`,     // POST
+  workflowStatus: (id) => `/projects/${id}/status`,   // GET
+  workflowResults: (id) => `/projects/${id}/results`, // GET (409 until finished)
+  dataReport: (id) => `/projects/${id}/data-report`, // GET
+  modelDownload: (id) => `/projects/${id}/model/download`, // GET (file)
+  modelInfo: (id) => `/projects/${id}/model/info`,         // GET
 };
