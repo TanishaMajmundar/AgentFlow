@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link, useMatch, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { LogOut, Plus, Search } from "lucide-react";
+import { Loader2, LogOut, Plus, Search } from "lucide-react";
 import Logo from "./Logo";
 import ThemeToggle from "./ThemeToggle";
 import { Skeleton } from "./Skeleton";
@@ -15,11 +15,12 @@ const DOT = { queued: "muted", running: "training", completed: "data", failed: "
 function StatusDot({ status }) {
   const token = DOT[status] || "muted";
   return (
-    <span className="relative flex h-2 w-2 shrink-0" title={status}>
-      {status === "running" && (
-        <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-60" style={{ background: rgb(token) }} />
+    <span className="flex h-3 w-3 shrink-0 items-center justify-center" title={status}>
+      {status === "running" ? (
+        <Loader2 size={12} className="animate-spin" style={{ color: rgb(token) }} aria-label="Running" />
+      ) : (
+        <span className="h-2 w-2 rounded-full" style={{ background: rgb(token) }} />
       )}
-      <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: rgb(token) }} />
     </span>
   );
 }
@@ -65,7 +66,7 @@ export default function Sidebar({ onNavigate }) {
 
       <div className="mt-7 flex items-center justify-between px-5">
         <Link to="/projects" onClick={onNavigate} className="label-mono !text-dim transition hover:!text-ink">Your projects</Link>
-        {data && <span className="font-mono text-[11px] text-dim">{data.length}</span>}
+        {data && <span className="font-mono text-meta text-dim">{data.length}</span>}
       </div>
 
       {data && data.length > 5 && (
@@ -89,23 +90,23 @@ export default function Sidebar({ onNavigate }) {
         )}
 
         {isError && (
-          <div className="px-3 py-4 text-[13px] text-muted">
+          <div className="px-3 py-4 text-sm text-muted">
             Couldn't load projects.{" "}
             <button onClick={() => refetch()} className="link-underline text-ink">Try again</button>
           </div>
         )}
 
         {data && data.length === 0 && (
-          <p className="px-3 py-4 text-[13px] leading-relaxed text-dim">
+          <p className="px-3 py-4 text-sm leading-relaxed text-dim">
             Nothing here yet. Your projects will be listed here once you create one.
           </p>
         )}
 
         {data && data.length > 0 && list.length === 0 && (
-          <p className="px-3 py-4 text-[13px] text-dim">No project matches “{query}”.</p>
+          <p className="px-3 py-4 text-sm text-dim">No project matches “{query}”.</p>
         )}
 
-        <ul className="stagger flex flex-col gap-0.5">
+        <ul className="flex flex-col gap-0.5">
           {list.map((p) => {
             const active = p.project_id === activeId;
             return (
@@ -114,20 +115,22 @@ export default function Sidebar({ onNavigate }) {
                   to={`/projects/${p.project_id}/${p.status === "completed" ? "results" : "workflow"}`}
                   onClick={onNavigate}
                   aria-current={active ? "page" : undefined}
-                  className={`group relative flex items-start gap-3 rounded-md px-3 py-2.5 transition-colors duration-200 ${
-                    active ? "bg-panel2" : "hover:bg-panel"
+                  title={`${p.name}\n${p.dataset_name || "no dataset"}`}
+                  className={`relative flex items-start gap-3 rounded-md px-3 py-2.5 transition-colors duration-150 ${
+                    active ? "bg-panel2" : "hover:bg-panel2/60"
                   }`}
                 >
                   <span
-                    className={`absolute left-0 top-2 bottom-2 w-[2px] rounded-full bg-brand transition-transform duration-300 ${
-                      active ? "scale-y-100" : "scale-y-0"
-                    }`}
+                    className={`absolute bottom-2 left-0 top-2 w-[2px] rounded-full bg-brand ${active ? "opacity-100" : "opacity-0"}`}
                   />
-                  <span className="mt-[7px]"><StatusDot status={p.status} /></span>
+                  <span className="mt-[5px]"><StatusDot status={p.status} /></span>
                   <span className="min-w-0 flex-1">
-                    <span className={`block truncate text-[13.5px] ${active ? "font-medium text-ink" : "text-ink/85"}`}>{p.name}</span>
-                    <span className="mt-0.5 block truncate text-[11.5px] text-dim">
-                      {p.dataset_name || "no dataset"} · {timeAgo(p.created_at)}
+                    <span className={`line-clamp-2 break-words text-[14px] leading-snug ${active ? "font-medium text-ink" : "text-ink/90"}`}>
+                      {p.name}
+                    </span>
+                    <span className="mt-1 flex items-baseline gap-2 text-meta text-muted">
+                      <span className="min-w-0 flex-1 truncate font-mono">{p.dataset_name || "no dataset"}</span>
+                      <span className="shrink-0 whitespace-nowrap text-dim">{timeAgo(p.created_at)}</span>
                     </span>
                   </span>
                 </Link>
@@ -143,7 +146,7 @@ export default function Sidebar({ onNavigate }) {
         </span>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-[13px] text-ink">{user?.name}</span>
-          <span className="block truncate text-[11.5px] text-dim">{user?.email}</span>
+          <span className="block truncate text-meta text-dim">{user?.email}</span>
         </span>
         <ThemeToggle />
         <button

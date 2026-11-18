@@ -7,6 +7,7 @@ export default {
   content: ["./index.html", "./src/**/*.{js,jsx}"],
   theme: {
     extend: {
+      fontSize: { meta: ["12px", { lineHeight: "16px" }] },      
       colors: {
         void: v("void"),
         deep: v("deep"),

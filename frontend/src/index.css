@@ -29,9 +29,9 @@
   --c-strategy: 164 84 58;
   --c-training: 176 125 30;
   --c-danger: 178 58 46;
-  --card-shadow: 0 1px 0 rgb(43 30 22 / 0.03), 0 18px 32px -24px rgb(43 30 22 / 0.35);
-  --card-shadow-hover: 0 1px 0 rgb(43 30 22 / 0.04), 0 22px 38px -22px rgb(107 66 38 / 0.5);
-  --grain-opacity: 0.06;
+  /* AFTER */
+  --card-shadow: 0 1px 2px rgb(43 30 22 / 0.05);
+  --card-shadow-hover: 0 1px 2px rgb(43 30 22 / 0.05);
   color-scheme: light;
 }
 
@@ -57,7 +57,7 @@
   --c-training: 224 178 90;
   --c-danger: 224 112 95;
   --card-shadow: none;
-  --card-shadow-hover: 0 14px 30px -18px rgb(0 0 0 / 0.65);
+  --card-shadow-hover: none;
   color-scheme: dark;
 }
 .scope-dark { color: rgb(var(--c-ink)); }
@@ -76,16 +76,9 @@
   body {
     @apply bg-void font-sans text-ink antialiased;
     margin: 0;
+    line-height: 1.55;
     font-feature-settings: "ss01", "cv11";
   }
-  /* soft paper grain — gives the flat colors a tactile, printed feel */
-  body::before {
-    content: "";
-    position: fixed; inset: 0; z-index: 100; pointer-events: none;
-    opacity: var(--grain-opacity);
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  }
-  :root[data-theme="dark"] body::before { filter: invert(1); opacity: 0.045; }
   ::selection { background: rgb(var(--c-brand) / 0.28); }
   :focus-visible { outline: 2px solid rgb(var(--c-brand)); outline-offset: 2px; }
   .font-display { font-optical-sizing: auto; letter-spacing: -0.015em; }
@@ -96,28 +89,30 @@
 }
 
 @layer components {
-  .label-mono { @apply font-sans text-[11px] font-semibold uppercase tracking-[0.12em] text-muted; }
+  /* AFTER */
+  .label-mono { @apply font-sans text-[12px] font-semibold uppercase tracking-[0.08em] text-muted; }
 
   .input {
-    @apply w-full rounded-md border border-line bg-panel2 px-3.5 py-2.5 text-sm text-ink
+    @apply min-h-[40px] w-full rounded-md border border-line bg-panel2 px-3.5 py-2 text-sm text-ink
            placeholder:text-dim transition focus:border-brand focus:outline-none
            focus:ring-[3px] focus:ring-brand/20 disabled:cursor-not-allowed disabled:opacity-50;
   }
   .input-error { @apply border-danger/70 focus:border-danger focus:ring-danger/20; }
 
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-md bg-brand px-5 py-2.5 text-sm
-           font-medium tracking-wide text-on-brand transition duration-200 hover:bg-brand-hover
+    @apply inline-flex min-h-[40px] items-center justify-center gap-2 rounded-md bg-brand px-5 py-2 text-sm
+           font-medium text-on-brand transition duration-150 hover:bg-brand-hover
            active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50 disabled:active:translate-y-0;
   }
   .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 rounded-md border border-line px-4 py-2.5
+    @apply inline-flex min-h-[40px] items-center justify-center gap-2 rounded-md border border-line px-4 py-2
            text-sm text-ink/80 transition duration-200 hover:border-ink/40 hover:text-ink active:translate-y-px;
   }
 
+  .btn-sm { @apply !min-h-[32px] !px-3 !py-1 text-[13px]; }
+
   .card { @apply rounded-lg border border-line bg-panel; box-shadow: var(--card-shadow); }
-  .card-hover { @apply card transition duration-300 hover:-translate-y-0.5 hover:border-line2; }
-  .card-hover:hover { box-shadow: var(--card-shadow-hover); }
+  .card-hover { @apply card transition-colors duration-150 hover:border-line2; }
 
   /* text link with an underline that draws in on hover */
   .link-underline {
@@ -152,7 +147,11 @@
   .stagger > *:nth-child(n + 9) { animation-delay: 0.5s; }
 
   /* slim themed scrollbars (sidebar list etc.) */
-  .scroll-slim { scrollbar-width: thin; scrollbar-color: rgb(var(--c-line2)) transparent; }
+  .scroll-slim { scrollbar-width: thin; scrollbar-color: transparent transparent; }
+  .scroll-slim:hover { scrollbar-color: rgb(var(--c-line2)) transparent; }
+  .scroll-slim::-webkit-scrollbar { width: 6px; }
+  .scroll-slim::-webkit-scrollbar-thumb { background: transparent; border-radius: 9999px; }
+  .scroll-slim:hover::-webkit-scrollbar-thumb { background: rgb(var(--c-line2)); }
 }
 
 /* Theme switch: circular reveal (View Transitions API) with a cross-fade fallback */

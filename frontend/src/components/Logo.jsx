@@ -13,7 +13,7 @@ export function LogoMark({ size = 26 }) {
 export default function Logo({ size = 20, to = "/" }) {
   return (
     <Link to={to} className="group inline-flex items-center gap-2.5 rounded-md" aria-label="AgentFlow home">
-      <span className="transition-transform duration-500 group-hover:rotate-[20deg]">
+      <span>
         <LogoMark size={size + 6} />
       </span>
       <span className="font-display tracking-tight" style={{ fontSize: size, fontWeight: 480 }}>
